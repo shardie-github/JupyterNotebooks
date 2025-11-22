@@ -223,3 +223,31 @@ def trigger(
     execution_id = runtime.run_workflow(workflow_id, context)
     
     typer.echo(f"✅ Triggered workflow execution: {execution_id}")
+
+
+@app.command()
+def visualize(
+    workflow_id: str = typer.Argument(..., help="Workflow ID"),
+    format: str = typer.Option("mermaid", "--format", "-f", help="Output format (mermaid or graphviz)"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+):
+    """Visualize a workflow as a diagram."""
+    from agent_factory.workflows.visualizer import visualize as visualize_workflow
+    
+    registry = LocalRegistry()
+    workflow = registry.get_workflow(workflow_id)
+    
+    if not workflow:
+        typer.echo(f"❌ Workflow not found: {workflow_id}")
+        raise typer.Exit(1)
+    
+    try:
+        content = visualize_workflow(workflow, format=format, output_path=output)
+        
+        if output:
+            typer.echo(f"✅ Visualization saved to: {output}")
+        else:
+            typer.echo("\n" + content)
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(1)

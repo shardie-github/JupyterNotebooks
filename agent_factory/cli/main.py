@@ -25,6 +25,14 @@ app.add_typer(marketplace.app, name="marketplace")
 from agent_factory.cli.commands.execution import app as execution_app
 app.add_typer(execution_app, name="execution")
 
+# Add new command groups
+from agent_factory.cli.commands import notebook, promptlog, eval, ui, saas
+app.add_typer(notebook.app, name="notebook")
+app.add_typer(promptlog.app, name="promptlog")
+app.add_typer(eval.app, name="eval")
+app.add_typer(ui.app, name="ui")
+app.add_typer(saas.app, name="saas")
+
 
 @app.command()
 def version():
