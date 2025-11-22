@@ -238,23 +238,68 @@ class Blueprint:
         Returns:
             Blueprint instance
         """
+        from agent_factory.core.agent import Agent
+        from agent_factory.core.workflow import Workflow
+        
         # Load agents
         agents = []
         if base_path:
             agents_dir = base_path / "agents"
             if agents_dir.exists():
                 for agent_file in agents_dir.glob("*.json"):
-                    agent_data = json.loads(agent_file.read_text())
-                    # Would need agents_registry to fully reconstruct
-                    # For now, create placeholder
-                    from agent_factory.core.agent import Agent
+                    try:
+                        agent_data = json.loads(agent_file.read_text())
+                        agents.append(Agent.from_dict(agent_data))
+                    except Exception as e:
+                        print(f"Warning: Could not load agent {agent_file}: {e}")
+        
+        # Also try loading from data dict
+        if "agents" in data and isinstance(data["agents"], list):
+            for agent_data in data["agents"]:
+                try:
                     agents.append(Agent.from_dict(agent_data))
+                except Exception as e:
+                    print(f"Warning: Could not load agent from data: {e}")
         
-        # Load tools (simplified - would need full tool registry)
+        # Load tools (simplified - tools are typically loaded from registry)
         tools = []
+        if base_path:
+            tools_dir = base_path / "tools"
+            if tools_dir.exists():
+                # Tools would need full implementation to reconstruct
+                # For now, we'll rely on tool registry
+                pass
         
-        # Load workflows (simplified - would need agents registry)
+        # Load workflows
         workflows = []
+        if base_path:
+            workflows_dir = base_path / "workflows"
+            if workflows_dir.exists():
+                for workflow_file in workflows_dir.glob("*.json"):
+                    try:
+                        workflow_data = json.loads(workflow_file.read_text())
+                        # Create workflow (would need agents registry for full execution)
+                        workflow = Workflow(
+                            id=workflow_data.get("id", workflow_file.stem),
+                            name=workflow_data.get("name", ""),
+                            steps=[],  # Would need to reconstruct WorkflowStep objects
+                        )
+                        workflows.append(workflow)
+                    except Exception as e:
+                        print(f"Warning: Could not load workflow {workflow_file}: {e}")
+        
+        # Also try loading from data dict
+        if "workflows" in data and isinstance(data["workflows"], list):
+            for workflow_data in data["workflows"]:
+                try:
+                    workflow = Workflow(
+                        id=workflow_data.get("id", ""),
+                        name=workflow_data.get("name", ""),
+                        steps=[],
+                    )
+                    workflows.append(workflow)
+                except Exception as e:
+                    print(f"Warning: Could not load workflow from data: {e}")
         
         # Create config
         config_data = data.get("config", {})

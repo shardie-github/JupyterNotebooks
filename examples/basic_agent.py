@@ -4,34 +4,8 @@ Example: Basic Agent
 Refactored from Agentic_Notebook.ipynb Cell 4
 """
 
-from agent_factory import Agent, function_tool
-
-
-@function_tool(name="calculate", description="Calculate mathematical expressions")
-def calculate(expression: str) -> float:
-    """Safely evaluate mathematical expressions."""
-    allowed = set('0123456789+-*/(). ')
-    if not all(c in allowed for c in expression):
-        raise ValueError('Invalid characters in expression')
-    
-    try:
-        return float(eval(expression))
-    except Exception as e:
-        raise ValueError(f'Cannot evaluate: {e}')
-
-
-@function_tool(name="search_web", description="Search the web for information")
-def search_web(query: str, max_results: int = 5) -> list:
-    """Search the web for information."""
-    # Mock implementation - replace with real API
-    return [
-        {
-            'title': f'Result {i+1} for: {query}',
-            'url': f'https://example.com/result{i+1}',
-            'snippet': f'Information about {query}...'
-        }
-        for i in range(min(max_results, 3))
-    ]
+from agent_factory import Agent
+from agent_factory.integrations.tools import calculator_tool, web_search_tool
 
 
 def main():
@@ -46,7 +20,7 @@ def main():
         When you don't know something, admit it honestly.
         """,
         model="gpt-4o-mini",
-        tools=[calculate, search_web],
+        tools=[calculator_tool, web_search_tool] if calculator_tool and web_search_tool else [],
     )
     
     # Run agent

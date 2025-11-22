@@ -242,18 +242,81 @@ class Workflow:
     
     def _evaluate_condition(self, condition: Condition, context: Dict[str, Any]) -> bool:
         """Evaluate a condition expression."""
-        # Simplified - in production, would use a proper expression evaluator
+        import ast
+        import operator
+        
         expression = condition.expression
         
-        # Replace context variables
-        for key, value in context.items():
-            expression = expression.replace(f"${key}", str(value))
+        # Safe operators for evaluation
+        safe_operators = {
+            ast.Eq: operator.eq,
+            ast.NotEq: operator.ne,
+            ast.Lt: operator.lt,
+            ast.LtE: operator.le,
+            ast.Gt: operator.gt,
+            ast.GtE: operator.ge,
+            ast.And: lambda a, b: a and b,
+            ast.Or: lambda a, b: a or b,
+            ast.Add: operator.add,
+            ast.Sub: operator.sub,
+            ast.Mult: operator.mul,
+            ast.Div: operator.truediv,
+        }
         
-        # Simple evaluation (unsafe - use ast.literal_eval or similar in production)
-        try:
-            return bool(eval(expression))
-        except:
+        def eval_node(node):
+            """Safely evaluate an AST node."""
+            if isinstance(node, ast.Constant):
+                return node.value
+            elif isinstance(node, ast.Name):
+                # Resolve from context
+                path = node.id.split(".")
+                value = context
+                for part in path:
+                    if isinstance(value, dict):
+                        value = value.get(part)
+                    else:
+                        return None
+                return value
+            elif isinstance(node, ast.BinOp):
+                left = eval_node(node.left)
+                right = eval_node(node.right)
+                op = safe_operators.get(type(node.op))
+                if op:
+                    return op(left, right)
+            elif isinstance(node, ast.Compare):
+                left = eval_node(node.left)
+                for op, right in zip(node.ops, node.comparators):
+                    right_val = eval_node(right)
+                    op_func = safe_operators.get(type(op))
+                    if op_func:
+                        if not op_func(left, right_val):
+                            return False
+                        left = right_val
+                return True
+            elif isinstance(node, ast.BoolOp):
+                values = [eval_node(v) for v in node.values]
+                op = safe_operators.get(type(node.op))
+                if op:
+                    result = values[0]
+                    for val in values[1:]:
+                        result = op(result, val)
+                    return result
+            
             return False
+        
+        try:
+            # Parse expression
+            tree = ast.parse(expression, mode='eval')
+            result = eval_node(tree.body)
+            return bool(result)
+        except Exception:
+            # Fallback to simple string replacement
+            for key, value in context.items():
+                expression = expression.replace(f"${key}", str(value))
+            try:
+                return bool(eval(expression, {"__builtins__": {}}))
+            except:
+                return False
     
     def to_dict(self) -> Dict[str, Any]:
         """Serialize workflow to dictionary."""

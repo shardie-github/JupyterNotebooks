@@ -1,0 +1,78 @@
+"""Tests for Blueprint class."""
+
+import pytest
+from pathlib import Path
+import tempfile
+from agent_factory.core.blueprint import Blueprint, PricingModel, PricingInfo, BlueprintConfig
+
+
+def test_blueprint_creation():
+    """Test creating a blueprint."""
+    blueprint = Blueprint(
+        id="test-blueprint",
+        name="Test Blueprint",
+        version="1.0.0",
+        description="A test blueprint",
+        author="Test Author",
+    )
+    
+    assert blueprint.id == "test-blueprint"
+    assert blueprint.name == "Test Blueprint"
+    assert blueprint.version == "1.0.0"
+
+
+def test_blueprint_pricing():
+    """Test blueprint pricing."""
+    pricing = PricingInfo(
+        model=PricingModel.SUBSCRIPTION,
+        price=99.0,
+        currency="USD",
+        period="monthly",
+    )
+    
+    blueprint = Blueprint(
+        id="test-blueprint",
+        name="Test Blueprint",
+        version="1.0.0",
+        description="Test",
+        author="Test",
+        pricing=pricing,
+    )
+    
+    assert blueprint.pricing.model == PricingModel.SUBSCRIPTION
+    assert blueprint.pricing.price == 99.0
+
+
+def test_blueprint_package():
+    """Test blueprint packaging."""
+    blueprint = Blueprint(
+        id="test-blueprint",
+        name="Test Blueprint",
+        version="1.0.0",
+        description="Test",
+        author="Test",
+    )
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        package_path = blueprint.package(tmpdir)
+        
+        assert Path(package_path).exists()
+        assert (Path(package_path) / "blueprint.yaml").exists()
+
+
+def test_blueprint_install():
+    """Test blueprint installation."""
+    blueprint = Blueprint(
+        id="test-blueprint",
+        name="Test Blueprint",
+        version="1.0.0",
+        description="Test",
+        author="Test",
+    )
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = blueprint.install(tmpdir)
+        
+        assert result is True
+        assert (Path(tmpdir) / "agents").exists()
+        assert (Path(tmpdir) / "tools").exists()
