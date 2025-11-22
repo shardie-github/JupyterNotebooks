@@ -1,5 +1,5 @@
 """
-Runtime engine for executing agents and workflows.
+Runtime engine for executing agents and workflows with prompt logging.
 """
 
 from typing import Dict, Optional, Any, List
@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from datetime import datetime
 import uuid
 
-from agent_factory.core.agent import Agent, AgentResult
-from agent_factory.core.workflow import Workflow, WorkflowResult
+from agent_factory.agents.agent import Agent, AgentResult
+from agent_factory.workflows.model import Workflow, WorkflowResult
+from agent_factory.promptlog import SQLiteStorage, Run as RunModel
 
 
 @dataclass
@@ -27,23 +28,32 @@ class Execution:
 
 class RuntimeEngine:
     """
-    Runtime engine for executing agents and workflows.
+    Runtime engine for executing agents and workflows with integrated prompt logging.
     
     Example:
         >>> engine = RuntimeEngine()
-        >>> result = engine.run_agent(agent, "Hello")
-        >>> execution = engine.get_execution(execution_id)
+        >>> engine.register_agent(agent)
+        >>> result = engine.run_agent(agent.id, "Hello")
     """
     
-    def __init__(self):
-        """Initialize runtime engine."""
+    def __init__(self, prompt_log_storage: Optional[SQLiteStorage] = None):
+        """
+        Initialize runtime engine.
+        
+        Args:
+            prompt_log_storage: Optional prompt log storage for logging runs
+        """
         self.executions: Dict[str, Execution] = {}
         self.agents_registry: Dict[str, Agent] = {}
         self.workflows_registry: Dict[str, Workflow] = {}
+        self.prompt_log_storage = prompt_log_storage or SQLiteStorage()
     
     def register_agent(self, agent: Agent) -> None:
         """Register an agent in the runtime."""
         self.agents_registry[agent.id] = agent
+        # Wire prompt logging into agent
+        if not agent.prompt_log_storage:
+            agent.prompt_log_storage = self.prompt_log_storage
     
     def register_workflow(self, workflow: Workflow) -> None:
         """Register a workflow in the runtime."""
@@ -92,6 +102,9 @@ class RuntimeEngine:
             execution.completed_at = datetime.now()
             execution.result = result
             
+            # Log to prompt log (agent already logs internally, but we log execution too)
+            self._log_execution(execution_id, agent_id, input_text, result)
+            
             return execution_id
             
         except Exception as e:
@@ -137,6 +150,9 @@ class RuntimeEngine:
             execution.completed_at = datetime.now()
             execution.result = result
             
+            # Log workflow execution
+            self._log_workflow_execution(execution_id, workflow_id, context, result)
+            
             return execution_id
             
         except Exception as e:
@@ -144,6 +160,52 @@ class RuntimeEngine:
             execution.completed_at = datetime.now()
             execution.error = str(e)
             raise
+    
+    def _log_execution(
+        self,
+        execution_id: str,
+        agent_id: str,
+        input_text: str,
+        result: AgentResult,
+    ) -> None:
+        """Log agent execution to prompt log."""
+        try:
+            run = RunModel(
+                run_id=execution_id,
+                agent_id=agent_id,
+                inputs={"input": input_text},
+                outputs={"output": result.output},
+                status="success" if result.status.value == "completed" else "error",
+                execution_time=result.execution_time,
+                tokens_used=result.tokens_used,
+                cost_estimate=0.0,
+            )
+            self.prompt_log_storage.save_run(run)
+        except Exception:
+            pass
+    
+    def _log_workflow_execution(
+        self,
+        execution_id: str,
+        workflow_id: str,
+        context: Dict[str, Any],
+        result: WorkflowResult,
+    ) -> None:
+        """Log workflow execution to prompt log."""
+        try:
+            run = RunModel(
+                run_id=execution_id,
+                workflow_id=workflow_id,
+                inputs=context,
+                outputs=result.output,
+                status="success" if result.success else "error",
+                execution_time=result.execution_time,
+                tokens_used=0,
+                cost_estimate=0.0,
+            )
+            self.prompt_log_storage.save_run(run)
+        except Exception:
+            pass
     
     def get_execution(self, execution_id: str) -> Optional[Execution]:
         """Get execution by ID."""
@@ -174,7 +236,6 @@ class RuntimeEngine:
         if status:
             results = [e for e in results if e.status == status]
         
-        # Sort by created_at descending
         results.sort(key=lambda e: e.created_at, reverse=True)
         
         return results[:limit]

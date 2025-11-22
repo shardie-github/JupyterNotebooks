@@ -6,13 +6,17 @@ A composable, extensible platform for building, deploying, and monetizing AI age
 
 __version__ = "0.1.0"
 
-from agent_factory.core.agent import Agent
-from agent_factory.core.tool import Tool, function_tool
-from agent_factory.core.workflow import Workflow
-from agent_factory.core.blueprint import Blueprint
+# Core primitives
+from agent_factory.agents.agent import Agent, AgentConfig, AgentResult
+from agent_factory.tools.base import Tool
+from agent_factory.tools.decorator import function_tool
+from agent_factory.workflows.model import Workflow
+from agent_factory.blueprints.model import Blueprint
 
 __all__ = [
     "Agent",
+    "AgentConfig",
+    "AgentResult",
     "Tool",
     "function_tool",
     "Workflow",

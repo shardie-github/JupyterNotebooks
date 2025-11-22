@@ -1,11 +1,15 @@
-"""Core primitives for Agent Factory Platform."""
+"""
+Core module - Legacy imports for backward compatibility.
+"""
 
-from agent_factory.core.agent import Agent, AgentConfig, AgentResult
-from agent_factory.core.tool import Tool, ToolMetadata, function_tool
-from agent_factory.core.workflow import Workflow, WorkflowStep, WorkflowResult
-from agent_factory.core.blueprint import Blueprint, BlueprintConfig
-from agent_factory.core.memory import MemoryStore, SQLiteMemoryStore
-from agent_factory.core.guardrails import Guardrails, GuardrailResult
+# Re-export from new locations for backward compatibility
+from agent_factory.agents.agent import Agent, AgentConfig, AgentResult, AgentStatus, Handoff
+from agent_factory.tools.base import Tool
+from agent_factory.tools.decorator import function_tool
+from agent_factory.workflows.model import Workflow, WorkflowStep, WorkflowResult, Trigger, TriggerType, Condition
+from agent_factory.runtime.memory import MemoryStore, SQLiteMemoryStore
+
+# Keep exceptions here for now
 from agent_factory.core.exceptions import (
     AgentFactoryError,
     AgentError,
@@ -21,28 +25,32 @@ from agent_factory.core.exceptions import (
     BlueprintError,
     BlueprintNotFoundError,
     BlueprintValidationError,
-    RegistryError,
-    RegistryNotFoundError,
-    DatabaseError,
-    ConfigurationError,
 )
 
+# Keep guardrails here for now
+from agent_factory.core.guardrails import Guardrails, Guardrail, GuardrailResult
+
 __all__ = [
+    # Agents
     "Agent",
     "AgentConfig",
     "AgentResult",
+    "AgentStatus",
+    "Handoff",
+    # Tools
     "Tool",
-    "ToolMetadata",
     "function_tool",
+    # Workflows
     "Workflow",
     "WorkflowStep",
     "WorkflowResult",
-    "Blueprint",
-    "BlueprintConfig",
+    "Trigger",
+    "TriggerType",
+    "Condition",
+    # Memory
     "MemoryStore",
     "SQLiteMemoryStore",
-    "Guardrails",
-    "GuardrailResult",
+    # Exceptions
     "AgentFactoryError",
     "AgentError",
     "AgentNotFoundError",
@@ -57,8 +65,8 @@ __all__ = [
     "BlueprintError",
     "BlueprintNotFoundError",
     "BlueprintValidationError",
-    "RegistryError",
-    "RegistryNotFoundError",
-    "DatabaseError",
-    "ConfigurationError",
+    # Guardrails
+    "Guardrails",
+    "Guardrail",
+    "GuardrailResult",
 ]
