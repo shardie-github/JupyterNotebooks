@@ -1,5 +1,9 @@
 # Agent Factory Platform - Comprehensive Implementation Roadmap
 
+> **NOTE**: This document has been superseded by the comprehensive 24-week implementation plan.  
+> **See**: `COMPREHENSIVE_24_WEEK_IMPLEMENTATION_PLAN.md` for the complete, detailed plan with resource requirements, budgets, and success metrics.  
+> **Quick Reference**: `IMPLEMENTATION_PLAN_SUMMARY.md` for a high-level overview.
+
 ## Overview
 
 This roadmap provides a detailed, phased implementation plan to address all identified gaps in the Agent Factory Platform project. The roadmap is organized by priority and includes timelines, resources, and dependencies.
