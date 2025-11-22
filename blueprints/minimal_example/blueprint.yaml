@@ -1,0 +1,30 @@
+blueprint:
+  id: minimal-example
+  name: Minimal Example Blueprint
+  version: 1.0.0
+  description: A minimal example blueprint demonstrating the full roundtrip
+  author: Agent Factory Team
+  category: example
+  tags:
+    - example
+    - minimal
+    - tutorial
+  agents:
+    - greeting-agent
+  tools:
+    - greet
+  workflows:
+    - greeting-workflow
+  knowledge_packs: []
+  config:
+    dependencies: []
+    environment_variables: {}
+    required_tools: []
+    required_agents: []
+  metadata:
+    demo_url: ""
+    documentation: ""
+  pricing:
+    model: free
+    price: 0.0
+    currency: USD

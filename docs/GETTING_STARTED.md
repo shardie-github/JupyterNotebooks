@@ -7,26 +7,51 @@ This guide walks you through converting a Jupyter notebook into a production-rea
 ## Prerequisites
 
 - Python 3.8+
-- OpenAI API key (or Anthropic API key)
-- Jupyter notebook with agent code (or use our example)
+- OpenAI API key (optional, for full LLM integration)
+- pip installed
 
-## Step 1: Run Notebook or Script
+## Installation
 
-Start with a working notebook or script that defines agents, tools, or workflows.
-
-**Example**: `Agentic_Notebook.ipynb` contains:
-- Agent definitions (Cell 4)
-- Tool functions (Cell 4)
-- Multi-agent patterns (Cell 5)
-
-Run the notebook to verify it works:
 ```bash
-jupyter notebook Agentic_Notebook.ipynb
+pip install agent-factory
 ```
 
-Or use the Python script version:
+Or install from source:
 ```bash
-python examples/basic_agent.py
+git clone https://github.com/agentfactory/platform.git
+cd platform
+pip install -e ".[dev]"
+```
+
+## Quick Start: Your First Agent
+
+Let's create a minimal working agent:
+
+```python
+from agent_factory import Agent, function_tool
+
+# Step 1: Create a tool
+@function_tool(name="greet", description="Greet someone by name")
+def greet(name: str) -> str:
+    """Greet a person by name."""
+    return f"Hello, {name}! Nice to meet you."
+
+# Step 2: Create an agent with the tool
+agent = Agent(
+    id="greeting-agent",
+    name="Greeting Agent",
+    instructions="You are a friendly assistant that greets people.",
+    tools=[greet],
+)
+
+# Step 3: Run the agent
+result = agent.run("Please greet Alice")
+print(result.output)  # Will use LLM if API key set, otherwise mock response
+```
+
+Run this example:
+```bash
+python examples/minimal_working_example.py
 ```
 
 ## Step 2: Convert Notebook to Agent

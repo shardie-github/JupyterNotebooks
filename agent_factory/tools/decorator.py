@@ -18,7 +18,8 @@ def function_tool(
         >>> @function_tool(name="calculate", description="Calculate math expressions")
         ... def calculate(expression: str) -> float:
         ...     return eval(expression)
-        >>> tool = calculate  # Now it's a Tool instance
+        >>> # calculate is now a Tool instance that can be called directly
+        >>> result = calculate(expression="2 + 2")
     """
     def decorator(func: Callable) -> Tool:
         tool_id = name or func.__name__
@@ -31,10 +32,6 @@ def function_tool(
             description=tool_description,
             implementation=func,
         )
-        
-        # Attach tool attributes to function
-        func.tool = tool
-        func.id = tool_id
         
         return tool
     

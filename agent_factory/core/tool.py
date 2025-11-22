@@ -139,6 +139,28 @@ class Tool(ABC):
         except Exception as e:
             raise ToolExecutionError(f"Tool {self.id} execution failed: {str(e)}")
     
+    def __call__(self, *args, **kwargs) -> Any:
+        """
+        Make tool callable directly.
+        
+        Args:
+            *args: Positional arguments (will be converted to kwargs based on signature)
+            **kwargs: Keyword arguments
+            
+        Returns:
+            Tool execution result
+        """
+        # If args provided, try to map them to function signature
+        if args:
+            import inspect
+            sig = inspect.signature(self._implementation)
+            param_names = list(sig.parameters.keys())
+            for i, arg in enumerate(args):
+                if i < len(param_names):
+                    kwargs[param_names[i]] = arg
+        
+        return self.execute(**kwargs)
+    
     def validate(self, **kwargs) -> bool:
         """
         Validate tool parameters.

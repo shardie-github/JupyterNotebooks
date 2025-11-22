@@ -1,0 +1,26 @@
+knowledge_pack:
+  id: minimal-example
+  name: Minimal Example Knowledge Pack
+  version: 1.0.0
+  description: A minimal example knowledge pack for testing
+  domain: general
+  tags:
+    - example
+    - minimal
+  data_sources:
+    - type: directory
+      path: ./data
+      config: {}
+  embedding_config:
+    model: text-embedding-3-small
+    provider: openai
+    chunk_size: 1000
+    chunk_overlap: 200
+    config: {}
+  retriever_config:
+    type: vector_store
+    vector_store: chroma
+    top_k: 5
+    similarity_threshold: 0.7
+    config: {}
+  metadata: {}

@@ -5,7 +5,7 @@ OpenAI Agents SDK integration for Agent Factory Platform.
 import os
 from typing import List, Dict, Any, Optional
 from openai import OpenAI
-from agent_factory.core.tool import Tool
+from agent_factory.tools.base import Tool
 
 
 class OpenAIAgentClient:

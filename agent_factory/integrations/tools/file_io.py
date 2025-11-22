@@ -1,7 +1,7 @@
 """File I/O tools for reading and writing files."""
 
 from pathlib import Path
-from agent_factory.core.tool import function_tool
+from agent_factory.tools.decorator import function_tool
 
 
 @function_tool(
@@ -54,6 +54,6 @@ def write_file(file_path: str, content: str) -> str:
     return f"Successfully wrote {len(content)} characters to {file_path}"
 
 
-# Create tool instances
-read_file_tool = read_file.tool if hasattr(read_file, 'tool') else None
-write_file_tool = write_file.tool if hasattr(write_file, 'tool') else None
+# The decorator returns Tool instances, so these are already Tools
+read_file_tool = read_file
+write_file_tool = write_file

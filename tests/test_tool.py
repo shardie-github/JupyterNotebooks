@@ -37,6 +37,10 @@ def test_tool_execution():
     
     result = tool.execute(a=5, b=3)
     assert result == 8
+    
+    # Test callable interface
+    result2 = tool(a=5, b=3)
+    assert result2 == 8
 
 
 @pytest.mark.unit
@@ -67,8 +71,9 @@ def test_function_tool_decorator():
     def test_function(x: str) -> str:
         return f"Processed: {x}"
     
-    assert hasattr(test_function, 'tool')
-    assert test_function.tool.id == "test_tool"
+    # The decorator returns a Tool instance directly
+    assert isinstance(test_function, Tool)
+    assert test_function.id == "test_tool"
 
 
 @pytest.mark.unit

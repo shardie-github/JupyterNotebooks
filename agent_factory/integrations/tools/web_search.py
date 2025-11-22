@@ -2,7 +2,7 @@
 
 import os
 import httpx
-from agent_factory.core.tool import Tool, function_tool
+from agent_factory.tools.decorator import function_tool
 
 
 @function_tool(
@@ -73,5 +73,5 @@ def _search_duckduckgo(query: str, num_results: int) -> str:
         return f"Search error: {str(e)}"
 
 
-# Create tool instance
-web_search_tool = web_search.tool if hasattr(web_search, 'tool') else None
+# The decorator returns a Tool instance, so web_search is already a Tool
+web_search_tool = web_search

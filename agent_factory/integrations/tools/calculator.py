@@ -1,6 +1,6 @@
 """Calculator tool for mathematical operations."""
 
-from agent_factory.core.tool import function_tool
+from agent_factory.tools.decorator import function_tool
 import math
 
 
@@ -37,5 +37,5 @@ def calculator(expression: str) -> float:
         raise ValueError(f"Invalid expression: {str(e)}")
 
 
-# Create tool instance
-calculator_tool = calculator.tool if hasattr(calculator, 'tool') else None
+# The decorator returns a Tool instance, so calculator is already a Tool
+calculator_tool = calculator
