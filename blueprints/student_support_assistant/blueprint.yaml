@@ -1,0 +1,63 @@
+id: student-support-assistant
+name: Student Support Assistant
+description: A 24/7 virtual teaching assistant for higher education institutions. Answers student questions, provides course guidance, and supports learning.
+version: 1.0.0
+category: education
+tags:
+  - education
+  - student-support
+  - teaching-assistant
+  - higher-education
+
+agents:
+  - id: support-agent
+    name: Student Support Agent
+    instructions: |
+      You are a helpful virtual teaching assistant for a higher education institution.
+      Your role is to:
+      - Answer student questions about course content, assignments, and deadlines
+      - Provide guidance on course materials and resources
+      - Help students understand concepts and clarify instructions
+      - Direct students to appropriate resources when needed
+      - Maintain a supportive and encouraging tone
+      
+      Always be respectful, patient, and clear in your responses.
+      If you don't know something, admit it and suggest where the student can find the answer.
+    model: gpt-4o
+    tools:
+      - web_search
+      - file_io
+
+workflows:
+  - id: question-routing
+    name: Question Routing Workflow
+    description: Routes student questions to appropriate resources
+    steps:
+      - id: classify-question
+        agent_id: support-agent
+        input_mapping:
+          student_question: input
+        output_mapping:
+          category: output.category
+          urgency: output.urgency
+      
+      - id: provide-answer
+        agent_id: support-agent
+        condition: classify-question.category == "course-content"
+        input_mapping:
+          question: classify-question.student_question
+          context: classify-question.context
+
+pricing_model: subscription
+price: 0.0
+target_audience:
+  - higher-education
+  - universities
+  - colleges
+  - lifelong-learning
+
+metadata:
+  mhe_partnership: true
+  education_focused: true
+  ferpa_compliant: true
+  lms_integration: true

@@ -1,0 +1,65 @@
+id: assessment-assistant
+name: Assessment Assistant
+description: Helps faculty create assessments, generate questions, develop rubrics, and provide automated feedback. Supports various assessment types.
+version: 1.0.0
+category: education
+tags:
+  - education
+  - assessment
+  - grading
+  - rubrics
+  - faculty-tools
+
+agents:
+  - id: assessment-agent
+    name: Assessment Assistant Agent
+    instructions: |
+      You are an assessment assistant for higher education faculty.
+      Your role is to:
+      - Generate assessment questions aligned with learning objectives
+      - Create rubrics for assignments and projects
+      - Provide feedback on student work
+      - Suggest assessment strategies
+      - Analyze assessment results
+      
+      Always ensure:
+      - Questions align with course learning objectives
+      - Rubrics are clear and fair
+      - Feedback is constructive and specific
+      - Assessments are appropriate for the course level
+    model: gpt-4o
+    tools:
+      - calculator
+      - file_io
+
+workflows:
+  - id: create-assessment
+    name: Create Assessment
+    description: Creates assessment with questions and rubrics
+    steps:
+      - id: generate-questions
+        agent_id: assessment-agent
+        input_mapping:
+          learning_objectives: input.objectives
+          assessment_type: input.type
+          difficulty_level: input.difficulty
+      
+      - id: create-rubric
+        agent_id: assessment-agent
+        input_mapping:
+          assessment: generate-questions.output
+          criteria: input.criteria
+
+pricing_model: subscription
+price: 0.0
+target_audience:
+  - faculty
+  - instructors
+  - instructional-designers
+  - higher-education
+
+metadata:
+  mhe_partnership: true
+  education_focused: true
+  faculty_tools: true
+  assessment_generation: true

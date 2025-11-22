@@ -1,0 +1,65 @@
+id: learning-path-generator
+name: Personalized Learning Path Generator
+description: Creates customized learning paths for students based on their goals, progress, and learning style. Ideal for adaptive learning programs.
+version: 1.0.0
+category: education
+tags:
+  - education
+  - personalized-learning
+  - adaptive-learning
+  - learning-paths
+
+agents:
+  - id: learning-path-agent
+    name: Learning Path Agent
+    instructions: |
+      You are a personalized learning path generator for higher education.
+      Your role is to:
+      - Analyze student learning goals and current knowledge
+      - Create customized learning paths with recommended resources
+      - Adapt paths based on student progress and performance
+      - Suggest supplementary materials and activities
+      - Track learning objectives and milestones
+      
+      Provide clear, structured learning paths with:
+      - Learning objectives
+      - Recommended resources (readings, videos, exercises)
+      - Estimated time commitments
+      - Assessment checkpoints
+      - Next steps based on progress
+    model: gpt-4o
+    tools:
+      - web_search
+      - calculator
+
+workflows:
+  - id: generate-learning-path
+    name: Generate Learning Path
+    description: Generates personalized learning path for student
+    steps:
+      - id: assess-student
+        agent_id: learning-path-agent
+        input_mapping:
+          student_profile: input
+          learning_goals: input.goals
+          current_knowledge: input.knowledge
+        
+      - id: create-path
+        agent_id: learning-path-agent
+        input_mapping:
+          assessment: assess-student.output
+          goals: assess-student.learning_goals
+
+pricing_model: subscription
+price: 0.0
+target_audience:
+  - higher-education
+  - universities
+  - colleges
+  - professional-development
+
+metadata:
+  mhe_partnership: true
+  education_focused: true
+  adaptive_learning: true
+  progress_tracking: true

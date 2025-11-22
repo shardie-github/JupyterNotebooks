@@ -5,7 +5,7 @@ Main CLI entry point for Agent Factory Platform.
 import typer
 from typing import Optional
 
-from agent_factory.cli.commands import agent, tool, workflow, blueprint, registry
+from agent_factory.cli.commands import agent, tool, workflow, blueprint, registry, marketplace
 
 app = typer.Typer(
     name="agent-factory",
@@ -19,6 +19,7 @@ app.add_typer(tool.app, name="tool")
 app.add_typer(workflow.app, name="workflow")
 app.add_typer(blueprint.app, name="blueprint")
 app.add_typer(registry.app, name="registry")
+app.add_typer(marketplace.app, name="marketplace")
 
 
 @app.command()

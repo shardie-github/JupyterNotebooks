@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: agent-factory-api-monitor
+  namespace: agent-factory
+spec:
+  selector:
+    matchLabels:
+      app: agent-factory-api
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
