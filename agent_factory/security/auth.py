@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional
 import jwt
-from fastapi import HTTPException, Security, status
+from fastapi import HTTPException, Security, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
@@ -163,3 +163,75 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
         )
     finally:
         db.close()
+
+
+async def get_current_user_from_request(request: Request) -> Optional[User]:
+    """
+    Get current authenticated user from request (supports both JWT and API keys).
+    
+    Args:
+        request: FastAPI request
+        
+    Returns:
+        User object or None if not authenticated
+    """
+    # Check for API key first
+    api_key = request.headers.get("X-API-Key") or request.headers.get("Authorization", "").replace("Bearer ", "")
+    
+    if api_key and api_key.startswith("af_"):
+        # API key authentication
+        from agent_factory.auth.api_keys import verify_api_key
+        
+        key_info = verify_api_key(api_key)
+        if key_info:
+            from agent_factory.database.session import get_db
+            from agent_factory.database.models import User as UserModel
+            
+            db = next(get_db())
+            try:
+                user_model = db.query(UserModel).filter(UserModel.id == key_info["user_id"]).first()
+                if user_model:
+                    user = User(
+                        id=user_model.id,
+                        email=user_model.email,
+                        roles=user_model.roles or [],
+                        permissions=key_info.get("permissions", user_model.permissions or []),
+                    )
+                    # Store tenant_id in request state
+                    request.state.tenant_id = key_info["tenant_id"]
+                    request.state.user_id = user.id
+                    return user
+            finally:
+                db.close()
+        
+        return None
+    
+    # Fall back to JWT authentication
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.replace("Bearer ", "")
+        try:
+            token_data = verify_token(token)
+            
+            from agent_factory.database.session import get_db
+            from agent_factory.database.models import User as UserModel
+            
+            db = next(get_db())
+            try:
+                user_model = db.query(UserModel).filter(UserModel.id == token_data.user_id).first()
+                if user_model:
+                    user = User(
+                        id=user_model.id,
+                        email=user_model.email,
+                        roles=user_model.roles or [],
+                        permissions=user_model.permissions or [],
+                    )
+                    request.state.tenant_id = user_model.tenant_id
+                    request.state.user_id = user.id
+                    return user
+            finally:
+                db.close()
+        except Exception:
+            pass
+    
+    return None

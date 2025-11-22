@@ -1,0 +1,68 @@
+"""
+Billing data models.
+"""
+
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Dict, Optional, Any
+
+
+@dataclass
+class Plan:
+    """Billing plan."""
+    id: str
+    name: str
+    plan_type: str  # free, pro, enterprise
+    price_monthly: float = 0.0
+    price_yearly: float = 0.0
+    currency: str = "USD"
+    features: Dict[str, Any] = None
+    limits: Dict[str, Any] = None
+    
+    def __post_init__(self):
+        if self.features is None:
+            self.features = {}
+        if self.limits is None:
+            self.limits = {}
+
+
+@dataclass
+class Subscription:
+    """Subscription to a plan."""
+    id: str
+    tenant_id: str
+    plan_id: str
+    status: str = "active"  # active, cancelled, expired
+    billing_cycle: str = "monthly"  # monthly, yearly
+    current_period_start: datetime = None
+    current_period_end: datetime = None
+    stripe_subscription_id: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    
+    def __post_init__(self):
+        if self.current_period_start is None:
+            self.current_period_start = datetime.utcnow()
+        if self.current_period_end is None:
+            self.current_period_end = datetime.utcnow()
+
+
+@dataclass
+class UsageRecord:
+    """Usage record for billing."""
+    id: str
+    tenant_id: str
+    billing_unit: str  # agent_run, workflow_run, token, etc.
+    quantity: float
+    unit_price: float = 0.0
+    total_cost: float = 0.0
+    currency: str = "USD"
+    period_start: datetime = None
+    period_end: datetime = None
+    
+    def __post_init__(self):
+        if self.period_start is None:
+            self.period_start = datetime.utcnow()
+        if self.period_end is None:
+            self.period_end = datetime.utcnow()
+        if self.total_cost == 0.0 and self.quantity > 0:
+            self.total_cost = self.quantity * self.unit_price

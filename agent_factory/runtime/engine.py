@@ -10,6 +10,7 @@ import uuid
 from agent_factory.agents.agent import Agent, AgentResult
 from agent_factory.workflows.model import Workflow, WorkflowResult
 from agent_factory.promptlog import SQLiteStorage, Run as RunModel
+from agent_factory.telemetry.collector import get_collector
 
 
 @dataclass
@@ -36,17 +37,30 @@ class RuntimeEngine:
         >>> result = engine.run_agent(agent.id, "Hello")
     """
     
-    def __init__(self, prompt_log_storage: Optional[SQLiteStorage] = None):
+    def __init__(
+        self,
+        prompt_log_storage: Optional[SQLiteStorage] = None,
+        tenant_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+    ):
         """
         Initialize runtime engine.
         
         Args:
             prompt_log_storage: Optional prompt log storage for logging runs
+            tenant_id: Optional tenant ID for telemetry
+            user_id: Optional user ID for telemetry
+            project_id: Optional project ID for telemetry
         """
         self.executions: Dict[str, Execution] = {}
         self.agents_registry: Dict[str, Agent] = {}
         self.workflows_registry: Dict[str, Workflow] = {}
         self.prompt_log_storage = prompt_log_storage or SQLiteStorage()
+        self.tenant_id = tenant_id
+        self.user_id = user_id
+        self.project_id = project_id
+        self.telemetry_collector = get_collector()
     
     def register_agent(self, agent: Agent) -> None:
         """Register an agent in the runtime."""
@@ -105,6 +119,22 @@ class RuntimeEngine:
             # Log to prompt log (agent already logs internally, but we log execution too)
             self._log_execution(execution_id, agent_id, input_text, result)
             
+            # Record telemetry
+            self.telemetry_collector.record_agent_run(
+                agent_id=agent_id,
+                tenant_id=self.tenant_id,
+                user_id=self.user_id,
+                project_id=self.project_id,
+                agent_name=getattr(agent, "name", None),
+                session_id=session_id,
+                status="completed" if execution.status == "completed" else "failed",
+                execution_time=result.execution_time if result else 0.0,
+                tokens_used=result.tokens_used if result else 0,
+                cost_estimate=result.cost_estimate if result else 0.0,
+                input_length=len(input_text),
+                output_length=len(result.output) if result and result.output else 0,
+            )
+            
             return execution_id
             
         except Exception as e:
@@ -152,6 +182,22 @@ class RuntimeEngine:
             
             # Log workflow execution
             self._log_workflow_execution(execution_id, workflow_id, context, result)
+            
+            # Record telemetry
+            workflow = self.workflows_registry.get(workflow_id)
+            self.telemetry_collector.record_workflow_run(
+                workflow_id=workflow_id,
+                tenant_id=self.tenant_id,
+                user_id=self.user_id,
+                project_id=self.project_id,
+                workflow_name=getattr(workflow, "name", None) if workflow else None,
+                status="completed" if execution.status == "completed" else "failed",
+                execution_time=result.execution_time if result else 0.0,
+                steps_completed=getattr(result, "steps_completed", 0) if result else 0,
+                steps_total=getattr(result, "steps_total", 0) if result else 0,
+                tokens_used=getattr(result, "tokens_used", 0) if result else 0,
+                cost_estimate=getattr(result, "cost_estimate", 0.0) if result else 0.0,
+            )
             
             return execution_id
             

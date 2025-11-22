@@ -133,3 +133,98 @@ class AuditLog(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     
     user = relationship("User")
+
+
+class APIKey(Base):
+    """API key model for programmatic access."""
+    __tablename__ = "api_keys"
+    
+    id = Column(String, primary_key=True)
+    key_hash = Column(String, nullable=False, unique=True, index=True)
+    name = Column(String, nullable=False)
+    tenant_id = Column(String, ForeignKey("tenants.id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    permissions = Column(JSON, default=list)
+    last_used_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    tenant = relationship("Tenant")
+    user = relationship("User")
+
+
+class Project(Base):
+    """Project/App model for organizing resources."""
+    __tablename__ = "projects"
+    
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    project_type = Column(String, default="saas_app")  # saas_app, blueprint_deployment, etc.
+    tenant_id = Column(String, ForeignKey("tenants.id"), nullable=False)
+    created_by = Column(String, ForeignKey("users.id"), nullable=False)
+    config = Column(JSON, default=dict)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    tenant = relationship("Tenant")
+    creator = relationship("User")
+
+
+class Plan(Base):
+    """Billing plan model."""
+    __tablename__ = "plans"
+    
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    plan_type = Column(String, nullable=False)  # free, pro, enterprise
+    price_monthly = Column(Float, default=0.0)
+    price_yearly = Column(Float, default=0.0)
+    currency = Column(String, default="USD")
+    features = Column(JSON, default=dict)
+    limits = Column(JSON, default=dict)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Subscription(Base):
+    """Subscription model."""
+    __tablename__ = "subscriptions"
+    
+    id = Column(String, primary_key=True)
+    tenant_id = Column(String, ForeignKey("tenants.id"), nullable=False)
+    plan_id = Column(String, ForeignKey("plans.id"), nullable=False)
+    status = Column(String, default="active")  # active, cancelled, expired
+    billing_cycle = Column(String, default="monthly")  # monthly, yearly
+    current_period_start = Column(DateTime, nullable=False)
+    current_period_end = Column(DateTime, nullable=False)
+    stripe_subscription_id = Column(String, nullable=True)
+    stripe_customer_id = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    tenant = relationship("Tenant")
+    plan = relationship("Plan")
+
+
+class UsageRecord(Base):
+    """Usage record for billing."""
+    __tablename__ = "usage_records"
+    
+    id = Column(String, primary_key=True)
+    tenant_id = Column(String, ForeignKey("tenants.id"), nullable=False)
+    subscription_id = Column(String, ForeignKey("subscriptions.id"), nullable=True)
+    billing_unit = Column(String, nullable=False)  # agent_run, workflow_run, token, etc.
+    quantity = Column(Float, nullable=False)
+    unit_price = Column(Float, default=0.0)
+    total_cost = Column(Float, default=0.0)
+    currency = Column(String, default="USD")
+    period_start = Column(DateTime, nullable=False)
+    period_end = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    tenant = relationship("Tenant")
+    subscription = relationship("Subscription")

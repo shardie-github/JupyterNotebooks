@@ -14,4 +14,10 @@ try:
 except ImportError:
     execution = None
 
-__all__ = ["agent", "tool", "workflow", "blueprint", "registry", "marketplace", "execution", "doctor", "config", "docs"]
+# Import metrics if available
+try:
+    from agent_factory.cli.commands import metrics
+except ImportError:
+    metrics = None
+
+__all__ = ["agent", "tool", "workflow", "blueprint", "registry", "marketplace", "execution", "doctor", "config", "docs", "metrics"]

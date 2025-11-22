@@ -10,7 +10,7 @@ from agent_factory.monitoring import setup_metrics, setup_structured_logging, se
 from agent_factory.security import setup_rate_limiting
 from agent_factory.database import init_db
 from agent_factory.cache import get_cache
-from agent_factory.api.routes import agents, tools, workflows, blueprints, executions
+from agent_factory.api.routes import agents, tools, workflows, blueprints, executions, telemetry
 
 # Setup structured logging
 logger = setup_structured_logging(os.getenv("LOG_LEVEL", "INFO"))
@@ -58,6 +58,7 @@ app.include_router(tools.router, prefix="/api/v1/tools", tags=["tools"])
 app.include_router(workflows.router, prefix="/api/v1/workflows", tags=["workflows"])
 app.include_router(blueprints.router, prefix="/api/v1/blueprints", tags=["blueprints"])
 app.include_router(executions.router, prefix="/api/v1/executions", tags=["executions"])
+app.include_router(telemetry.router, prefix="/api/v1/telemetry", tags=["telemetry"])
 
 # Additional routers
 from agent_factory.api.routes import scheduler, payments

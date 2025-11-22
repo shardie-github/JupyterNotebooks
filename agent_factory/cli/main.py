@@ -29,12 +29,13 @@ from agent_factory.cli.commands.execution import app as execution_app
 app.add_typer(execution_app, name="execution")
 
 # Add new command groups
-from agent_factory.cli.commands import notebook, promptlog, eval, ui, saas
+from agent_factory.cli.commands import notebook, promptlog, eval, ui, saas, metrics
 app.add_typer(notebook.app, name="notebook")
 app.add_typer(promptlog.app, name="promptlog")
 app.add_typer(eval.app, name="eval")
 app.add_typer(ui.app, name="ui")
 app.add_typer(saas.app, name="saas")
+app.add_typer(metrics.app, name="metrics")
 
 
 @app.command()
