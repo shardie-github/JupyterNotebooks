@@ -1,0 +1,29 @@
+blueprint:
+  id: support-bot-pro
+  name: Support Bot Pro
+  version: 1.0.0
+  description: Production-ready customer support bot with FAQ resolution and ticket creation
+  author: Agent Factory Team
+  category: customer-support
+  tags: [support, chatbot, faq, customer-service]
+  
+  pricing:
+    model: subscription
+    price: 99
+    currency: USD
+    period: monthly
+  
+  config:
+    dependencies:
+      - openai
+    environment_variables:
+      OPENAI_API_KEY: "Your OpenAI API key"
+    required_tools:
+      - search_kb
+      - create_ticket
+    required_agents:
+      - support-bot
+  
+  metadata:
+    demo_url: https://demo.agentfactory.io/support-bot
+    documentation: https://docs.agentfactory.io/blueprints/support-bot

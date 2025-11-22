@@ -1,0 +1,29 @@
+blueprint:
+  id: research-assistant
+  name: Research Assistant
+  version: 1.0.0
+  description: AI-powered research assistant that searches, analyzes, and generates reports
+  author: Agent Factory Team
+  category: data-analytics
+  tags: [research, analysis, reports, data]
+  
+  pricing:
+    model: free
+  
+  config:
+    dependencies:
+      - openai
+    environment_variables:
+      OPENAI_API_KEY: "Your OpenAI API key"
+      SERPER_API_KEY: "Your Serper API key (optional)"
+    required_tools:
+      - web_search
+      - read_file
+      - write_file
+    required_agents:
+      - research-searcher
+      - research-analyzer
+  
+  metadata:
+    demo_url: https://demo.agentfactory.io/research-assistant
+    documentation: https://docs.agentfactory.io/blueprints/research-assistant
