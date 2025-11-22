@@ -145,15 +145,21 @@ agent-factory blueprint search "education"
 # Install development dependencies
 pip install -e ".[dev]"
 
-# Run tests
-pytest
+# Run all CI checks locally
+make ci
 
-# Format code
-black agent_factory/
+# Or run individually
+make lint          # Run linters (ruff + black check)
+make type-check    # Run type checker (mypy)
+make test-unit     # Run unit tests only
+make test          # Run all tests
+make format        # Auto-format code
 
-# Type check
-mypy agent_factory/
+# Run integration tests (requires services)
+make test-integration
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
 
 ## 📝 Examples
 
@@ -181,7 +187,11 @@ Interested in partnering with Agent Factory Platform for your institution?
 
 ## 🤝 Contributing
 
-Contributions welcome! Please see our contributing guidelines.
+Contributions welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Development setup
+- Running CI checks locally
+- Test guidelines
+- Pull request process
 
 ## 📄 License
 

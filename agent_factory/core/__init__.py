@@ -6,6 +6,26 @@ from agent_factory.core.workflow import Workflow, WorkflowStep, WorkflowResult
 from agent_factory.core.blueprint import Blueprint, BlueprintConfig
 from agent_factory.core.memory import MemoryStore, SQLiteMemoryStore
 from agent_factory.core.guardrails import Guardrails, GuardrailResult
+from agent_factory.core.exceptions import (
+    AgentFactoryError,
+    AgentError,
+    AgentNotFoundError,
+    AgentExecutionError,
+    ToolError,
+    ToolNotFoundError,
+    ToolExecutionError,
+    ToolValidationError,
+    WorkflowError,
+    WorkflowNotFoundError,
+    WorkflowExecutionError,
+    BlueprintError,
+    BlueprintNotFoundError,
+    BlueprintValidationError,
+    RegistryError,
+    RegistryNotFoundError,
+    DatabaseError,
+    ConfigurationError,
+)
 
 __all__ = [
     "Agent",
@@ -23,4 +43,22 @@ __all__ = [
     "SQLiteMemoryStore",
     "Guardrails",
     "GuardrailResult",
+    "AgentFactoryError",
+    "AgentError",
+    "AgentNotFoundError",
+    "AgentExecutionError",
+    "ToolError",
+    "ToolNotFoundError",
+    "ToolExecutionError",
+    "ToolValidationError",
+    "WorkflowError",
+    "WorkflowNotFoundError",
+    "WorkflowExecutionError",
+    "BlueprintError",
+    "BlueprintNotFoundError",
+    "BlueprintValidationError",
+    "RegistryError",
+    "RegistryNotFoundError",
+    "DatabaseError",
+    "ConfigurationError",
 ]

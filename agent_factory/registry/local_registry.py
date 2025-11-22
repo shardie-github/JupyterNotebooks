@@ -74,14 +74,79 @@ class LocalRegistry:
         tool_file.write_text(json.dumps(tool.to_dict(), indent=2))
     
     def get_tool(self, tool_id: str) -> Optional[Tool]:
-        """Get a tool by ID."""
+        """
+        Get a tool by ID.
+        
+        Args:
+            tool_id: Tool ID
+            
+        Returns:
+            Tool instance or None
+        """
         tool_file = self.base_path / "tools" / f"{tool_id}.json"
         if not tool_file.exists():
             return None
         
-        data = json.loads(tool_file.read_text())
-        # Would need full tool reconstruction - simplified for now
-        return None
+        try:
+            data = json.loads(tool_file.read_text())
+            
+            # Reconstruct tool from saved data
+            # Note: Implementation function cannot be fully reconstructed from JSON
+            # In production, tools would be registered with their implementations
+            # For now, create a placeholder implementation
+            
+            def placeholder_implementation(**kwargs):
+                """Placeholder implementation - tool needs to be re-registered with actual function."""
+                raise NotImplementedError(
+                    f"Tool {tool_id} implementation not available. "
+                    "Please re-register the tool with its implementation function."
+                )
+            
+            # Try to get schema to infer parameter types
+            schema = data.get("schema", {})
+            parameters = schema.get("parameters", {})
+            
+            tool = Tool(
+                id=data.get("id", tool_id),
+                name=data.get("name", tool_id),
+                description=data.get("description", ""),
+                implementation=placeholder_implementation,
+            )
+            
+            # Restore metadata if available
+            if "metadata" in data:
+                from agent_factory.core.tool import ToolMetadata, ParameterSchema
+                metadata_dict = data["metadata"]
+                
+                # Reconstruct parameter schemas
+                param_schemas = {}
+                if "parameters" in schema:
+                    for param_name, param_data in schema["parameters"].get("properties", {}).items():
+                        param_schemas[param_name] = ParameterSchema(
+                            name=param_name,
+                            type=param_data.get("type", "string"),
+                            description=param_data.get("description", ""),
+                            required=param_name in schema["parameters"].get("required", []),
+                            default=param_data.get("default"),
+                        )
+                
+                tool.metadata = ToolMetadata(
+                    id=tool.id,
+                    name=tool.name,
+                    description=tool.description,
+                    version=metadata_dict.get("version", "1.0.0"),
+                    author=metadata_dict.get("author", "unknown"),
+                    category=metadata_dict.get("category", "general"),
+                    parameters=param_schemas,
+                    tags=metadata_dict.get("tags", []),
+                )
+            
+            return tool
+        except Exception as e:
+            # Log error but don't fail completely
+            import logging
+            logging.warning(f"Failed to load tool {tool_id}: {e}")
+            return None
     
     def list_tools(self) -> List[str]:
         """List all registered tool IDs."""
@@ -95,14 +160,81 @@ class LocalRegistry:
         workflow_file.write_text(json.dumps(workflow.to_dict(), indent=2))
     
     def get_workflow(self, workflow_id: str) -> Optional[Workflow]:
-        """Get a workflow by ID."""
+        """
+        Get a workflow by ID.
+        
+        Args:
+            workflow_id: Workflow ID
+            
+        Returns:
+            Workflow instance or None
+        """
         workflow_file = self.base_path / "workflows" / f"{workflow_id}.json"
         if not workflow_file.exists():
             return None
         
-        data = json.loads(workflow_file.read_text())
-        # Would need agents registry to reconstruct - simplified for now
-        return None
+        try:
+            data = json.loads(workflow_file.read_text())
+            
+            # Reconstruct workflow steps
+            from agent_factory.core.workflow import WorkflowStep, Trigger, TriggerType, Condition
+            
+            steps = []
+            for step_data in data.get("steps", []):
+                condition = None
+                if step_data.get("condition"):
+                    cond_data = step_data["condition"]
+                    condition = Condition(
+                        expression=cond_data.get("expression", ""),
+                        description=cond_data.get("description"),
+                    )
+                
+                step = WorkflowStep(
+                    id=step_data.get("id", ""),
+                    agent_id=step_data.get("agent_id", ""),
+                    input_mapping=step_data.get("input_mapping", {}),
+                    output_mapping=step_data.get("output_mapping", {}),
+                    condition=condition,
+                    timeout=step_data.get("timeout", 30),
+                    retry_attempts=step_data.get("retry_attempts", 3),
+                )
+                steps.append(step)
+            
+            # Reconstruct triggers
+            triggers = []
+            for trigger_data in data.get("triggers", []):
+                trigger = Trigger(
+                    type=TriggerType(trigger_data.get("type", "manual")),
+                    config=trigger_data.get("config", {}),
+                    enabled=trigger_data.get("enabled", True),
+                )
+                triggers.append(trigger)
+            
+            # Reconstruct branching
+            branching = {}
+            if "branching" in data:
+                for step_id, cond_data in data["branching"].items():
+                    branching[step_id] = Condition(
+                        expression=cond_data.get("expression", ""),
+                        description=cond_data.get("description"),
+                    )
+            
+            # Create workflow with agents registry (will be populated by runtime)
+            workflow = Workflow(
+                id=data.get("id", workflow_id),
+                name=data.get("name", ""),
+                steps=steps,
+                triggers=triggers if triggers else None,
+                branching=branching if branching else None,
+                agents_registry={},  # Will be populated by runtime engine
+            )
+            
+            return workflow
+        except Exception as e:
+            # Log error but don't fail completely
+            import logging
+            logging.warning(f"Failed to load workflow {workflow_id}: {e}")
+            return None
     
     def list_workflows(self) -> List[str]:
         """List all registered workflow IDs."""

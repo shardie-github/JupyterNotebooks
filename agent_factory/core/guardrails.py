@@ -14,7 +14,7 @@ class GuardrailResult:
     allowed: bool
     reason: Optional[str] = None
     modified_output: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class Guardrail(ABC):

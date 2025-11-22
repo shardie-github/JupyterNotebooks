@@ -8,4 +8,10 @@ try:
 except ImportError:
     marketplace = None
 
-__all__ = ["agent", "tool", "workflow", "blueprint", "registry", "marketplace"]
+# Import execution if available
+try:
+    from agent_factory.cli.commands import execution
+except ImportError:
+    execution = None
+
+__all__ = ["agent", "tool", "workflow", "blueprint", "registry", "marketplace", "execution"]

@@ -22,7 +22,7 @@ class Execution:
     completed_at: Optional[datetime] = None
     result: Optional[Any] = None
     error: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class RuntimeEngine:
@@ -81,7 +81,7 @@ class RuntimeEngine:
             entity_id=agent_id,
             status="running",
             created_at=datetime.now(),
-            metadata={},
+            metadata={"input_text": input_text, "session_id": session_id, "context": context},
         )
         self.executions[execution_id] = execution
         
@@ -126,7 +126,7 @@ class RuntimeEngine:
             entity_id=workflow_id,
             status="running",
             created_at=datetime.now(),
-            metadata={},
+            metadata={"context": context},
         )
         self.executions[execution_id] = execution
         

@@ -89,7 +89,137 @@ def run(
         context = {}
     
     runtime = RuntimeEngine()
+    # Register workflow with runtime
+    runtime.register_workflow(workflow)
+    
     execution_id = runtime.run_workflow(workflow_id, context)
     
     typer.echo(f"✅ Started workflow execution: {execution_id}")
     typer.echo(f"💡 Check status: agent-factory execution get {execution_id}")
+
+
+@app.command()
+def update(
+    workflow_id: str = typer.Argument(..., help="Workflow ID"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Workflow name"),
+    steps_file: Optional[str] = typer.Option(None, "--steps", "-s", help="Path to steps JSON file"),
+):
+    """Update a workflow."""
+    registry = LocalRegistry()
+    workflow = registry.get_workflow(workflow_id)
+    
+    if not workflow:
+        typer.echo(f"❌ Workflow not found: {workflow_id}")
+        raise typer.Exit(1)
+    
+    if name:
+        workflow.name = name
+    
+    if steps_file:
+        with open(steps_file) as f:
+            steps_data = json.load(f)
+        
+        from agent_factory.core.workflow import WorkflowStep, Condition
+        
+        steps = []
+        for step_data in steps_data:
+            condition = None
+            if step_data.get("condition"):
+                cond_data = step_data["condition"]
+                condition = Condition(
+                    expression=cond_data.get("expression", ""),
+                    description=cond_data.get("description"),
+                )
+            
+            step = WorkflowStep(
+                id=step_data["id"],
+                agent_id=step_data["agent_id"],
+                input_mapping=step_data.get("input_mapping", {}),
+                output_mapping=step_data.get("output_mapping", {}),
+                condition=condition,
+                timeout=step_data.get("timeout", 30),
+                retry_attempts=step_data.get("retry_attempts", 3),
+            )
+            steps.append(step)
+        
+        workflow.steps = steps
+    
+    registry.register_workflow(workflow)
+    
+    runtime = RuntimeEngine()
+    runtime.register_workflow(workflow)
+    
+    typer.echo(f"✅ Updated workflow: {workflow_id}")
+
+
+@app.command()
+def delete(
+    workflow_id: str = typer.Argument(..., help="Workflow ID"),
+):
+    """Delete a workflow."""
+    registry = LocalRegistry()
+    workflow_file = registry.base_path / "workflows" / f"{workflow_id}.json"
+    
+    if not workflow_file.exists():
+        typer.echo(f"❌ Workflow not found: {workflow_id}")
+        raise typer.Exit(1)
+    
+    workflow_file.unlink()
+    typer.echo(f"✅ Deleted workflow: {workflow_id}")
+
+
+@app.command()
+def status(
+    workflow_id: str = typer.Argument(..., help="Workflow ID"),
+):
+    """Get workflow status."""
+    registry = LocalRegistry()
+    workflow = registry.get_workflow(workflow_id)
+    
+    if not workflow:
+        typer.echo(f"❌ Workflow not found: {workflow_id}")
+        raise typer.Exit(1)
+    
+    runtime = RuntimeEngine()
+    executions = runtime.list_executions(entity_id=workflow_id, limit=5)
+    
+    typer.echo(f"Workflow: {workflow.name} ({workflow_id})")
+    typer.echo(f"Steps: {len(workflow.steps)}")
+    typer.echo(f"\nRecent Executions:")
+    
+    if not executions:
+        typer.echo("  No executions found.")
+    else:
+        for ex in executions:
+            status_icon = "✅" if ex.status == "completed" else "❌" if ex.status == "error" else "⏳"
+            typer.echo(f"  {status_icon} {ex.id}: {ex.status}")
+
+
+@app.command()
+def trigger(
+    workflow_id: str = typer.Argument(..., help="Workflow ID"),
+    context_file: Optional[str] = typer.Option(None, "--context", "-c", help="Path to context JSON file"),
+):
+    """Trigger a workflow manually."""
+    import json
+    
+    registry = LocalRegistry()
+    workflow = registry.get_workflow(workflow_id)
+    
+    if not workflow:
+        typer.echo(f"❌ Workflow not found: {workflow_id}")
+        raise typer.Exit(1)
+    
+    # Load context
+    if context_file:
+        with open(context_file) as f:
+            context = json.load(f)
+    else:
+        context = {}
+    
+    runtime = RuntimeEngine()
+    runtime.register_workflow(workflow)
+    
+    execution_id = runtime.run_workflow(workflow_id, context)
+    
+    typer.echo(f"✅ Triggered workflow execution: {execution_id}")

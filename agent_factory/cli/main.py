@@ -21,6 +21,10 @@ app.add_typer(blueprint.app, name="blueprint")
 app.add_typer(registry.app, name="registry")
 app.add_typer(marketplace.app, name="marketplace")
 
+# Add execution commands
+from agent_factory.cli.commands.execution import app as execution_app
+app.add_typer(execution_app, name="execution")
+
 
 @app.command()
 def version():

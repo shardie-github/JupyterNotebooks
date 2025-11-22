@@ -138,11 +138,28 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     token = credentials.credentials
     token_data = verify_token(token)
     
-    # In production, fetch user from database
-    # For now, return mock user
-    return User(
-        id=token_data.user_id or "anonymous",
-        email=token_data.email or "anonymous@example.com",
-        roles=["user"],
-        permissions=["read", "write"]
-    )
+    # Fetch user from database
+    from agent_factory.database.session import get_db
+    from agent_factory.database.models import User as UserModel
+    
+    db = next(get_db())
+    try:
+        user_model = db.query(UserModel).filter(UserModel.id == token_data.user_id).first()
+        
+        if not user_model:
+            # Return anonymous user if not found
+            return User(
+                id=token_data.user_id or "anonymous",
+                email=token_data.email or "anonymous@example.com",
+                roles=["user"],
+                permissions=["read", "write"]
+            )
+        
+        return User(
+            id=user_model.id,
+            email=user_model.email,
+            roles=user_model.roles or [],
+            permissions=user_model.permissions or []
+        )
+    finally:
+        db.close()

@@ -4,6 +4,7 @@ import pytest
 from agent_factory.core.tool import Tool, function_tool, ToolValidationError
 
 
+@pytest.mark.unit
 def test_tool_creation():
     """Test creating a tool."""
     def dummy_function(x: str) -> str:
@@ -21,6 +22,7 @@ def test_tool_creation():
     assert tool.description == "A test tool"
 
 
+@pytest.mark.unit
 def test_tool_execution():
     """Test tool execution."""
     def add(a: int, b: int) -> int:
@@ -37,6 +39,7 @@ def test_tool_execution():
     assert result == 8
 
 
+@pytest.mark.unit
 def test_tool_validation():
     """Test tool parameter validation."""
     def add(a: int, b: int) -> int:
@@ -57,6 +60,7 @@ def test_tool_validation():
         tool.validate(a=5)
 
 
+@pytest.mark.unit
 def test_function_tool_decorator():
     """Test function_tool decorator."""
     @function_tool(name="test_tool", description="A test tool")
@@ -67,6 +71,7 @@ def test_function_tool_decorator():
     assert test_function.tool.id == "test_tool"
 
 
+@pytest.mark.unit
 def test_tool_schema():
     """Test tool schema generation."""
     def example_function(name: str, age: int = 25) -> str:

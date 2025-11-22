@@ -172,10 +172,11 @@ class Workflow:
                 # Check branching
                 if step.id in self.branching:
                     condition = self.branching[step.id]
-                    if self._evaluate_condition(condition, workflow_context):
-                        # Branch to next step based on condition
-                        # For now, continue to next step
-                        pass
+                    if not self._evaluate_condition(condition, workflow_context):
+                        # Condition not met, skip remaining steps or branch to alternative path
+                        # For now, stop execution if condition not met
+                        # In production, would support alternative branch paths
+                        break
             
             execution_time = time.time() - start_time
             
@@ -194,7 +195,16 @@ class Workflow:
             )
     
     def _map_inputs(self, mapping: Dict[str, str], context: Dict[str, Any]) -> str:
-        """Map workflow context to agent input."""
+        """
+        Map workflow context to agent input.
+        
+        Args:
+            mapping: Input mapping dictionary
+            context: Workflow context
+            
+        Returns:
+            Mapped input string
+        """
         # Simple mapping - in production, would support expressions like "$trigger.query"
         if not mapping:
             # Default: use first context value as input
@@ -210,7 +220,16 @@ class Workflow:
         return "\n".join(inputs)
     
     def _map_outputs(self, mapping: Dict[str, str], output: str) -> Dict[str, Any]:
-        """Map agent output to workflow context."""
+        """
+        Map agent output to workflow context.
+        
+        Args:
+            mapping: Output mapping dictionary
+            output: Agent output string
+            
+        Returns:
+            Mapped output dictionary
+        """
         result = {}
         
         if not mapping:
@@ -224,7 +243,16 @@ class Workflow:
         return result
     
     def _resolve_path(self, path: str, context: Dict[str, Any]) -> Any:
-        """Resolve a path expression in context."""
+        """
+        Resolve a path expression in context.
+        
+        Args:
+            path: Path expression (e.g., "$steps.search.output")
+            context: Workflow context dictionary
+            
+        Returns:
+            Resolved value or None
+        """
         # Simple implementation - in production, would support "$steps.search.output"
         if path.startswith("$"):
             # Remove $ and resolve
@@ -329,6 +357,12 @@ class Workflow:
                     "agent_id": step.agent_id,
                     "input_mapping": step.input_mapping,
                     "output_mapping": step.output_mapping,
+                    "condition": {
+                        "expression": step.condition.expression,
+                        "description": step.condition.description,
+                    } if step.condition else None,
+                    "timeout": step.timeout,
+                    "retry_attempts": step.retry_attempts,
                 }
                 for step in self.steps
             ],
@@ -336,6 +370,7 @@ class Workflow:
                 {
                     "type": trigger.type.value,
                     "config": trigger.config,
+                    "enabled": trigger.enabled,
                 }
                 for trigger in self.triggers
             ],

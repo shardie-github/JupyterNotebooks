@@ -5,6 +5,7 @@ from agent_factory.core.workflow import Workflow, WorkflowStep, Trigger, Trigger
 from agent_factory.core.agent import Agent
 
 
+@pytest.mark.unit
 def test_workflow_creation():
     """Test creating a workflow."""
     step = WorkflowStep(
@@ -23,6 +24,7 @@ def test_workflow_creation():
     assert len(workflow.steps) == 1
 
 
+@pytest.mark.unit
 def test_workflow_add_step():
     """Test adding a step to workflow."""
     workflow = Workflow(
@@ -40,6 +42,7 @@ def test_workflow_add_step():
     assert len(workflow.steps) == 1
 
 
+@pytest.mark.unit
 def test_workflow_add_trigger():
     """Test adding a trigger to workflow."""
     workflow = Workflow(
@@ -57,6 +60,7 @@ def test_workflow_add_trigger():
     assert len(workflow.triggers) == 1
 
 
+@pytest.mark.unit
 def test_workflow_execution():
     """Test workflow execution."""
     # Create mock agent

@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional, Callable
 import inspect
 import functools
 
+from agent_factory.core.exceptions import ToolExecutionError, ToolValidationError
+
 
 @dataclass
 class ParameterSchema:
@@ -227,13 +229,3 @@ def function_tool(
         return tool
     
     return decorator
-
-
-class ToolExecutionError(Exception):
-    """Error during tool execution."""
-    pass
-
-
-class ToolValidationError(Exception):
-    """Error during tool parameter validation."""
-    pass

@@ -261,14 +261,32 @@ class Blueprint:
                 except Exception as e:
                     print(f"Warning: Could not load agent from data: {e}")
         
-        # Load tools (simplified - tools are typically loaded from registry)
+        # Load tools from blueprint directory
         tools = []
         if base_path:
             tools_dir = base_path / "tools"
             if tools_dir.exists():
-                # Tools would need full implementation to reconstruct
-                # For now, we'll rely on tool registry
-                pass
+                for tool_file in tools_dir.glob("*.json"):
+                    try:
+                        tool_data = json.loads(tool_file.read_text())
+                        # Create placeholder tool (implementation needs to be registered)
+                        from agent_factory.core.tool import Tool
+                        
+                        def placeholder_impl(**kwargs):
+                            raise NotImplementedError(
+                                f"Tool {tool_data.get('id')} implementation not available. "
+                                "Please register the tool with its implementation."
+                            )
+                        
+                        tool = Tool(
+                            id=tool_data.get("id", tool_file.stem),
+                            name=tool_data.get("name", tool_file.stem),
+                            description=tool_data.get("description", ""),
+                            implementation=placeholder_impl,
+                        )
+                        tools.append(tool)
+                    except Exception as e:
+                        print(f"Warning: Could not load tool {tool_file}: {e}")
         
         # Load workflows
         workflows = []
@@ -278,11 +296,34 @@ class Blueprint:
                 for workflow_file in workflows_dir.glob("*.json"):
                     try:
                         workflow_data = json.loads(workflow_file.read_text())
-                        # Create workflow (would need agents registry for full execution)
+                        # Reconstruct workflow steps
+                        from agent_factory.core.workflow import WorkflowStep, Condition
+                        
+                        steps = []
+                        for step_data in workflow_data.get("steps", []):
+                            condition = None
+                            if step_data.get("condition"):
+                                cond_data = step_data["condition"]
+                                condition = Condition(
+                                    expression=cond_data.get("expression", ""),
+                                    description=cond_data.get("description"),
+                                )
+                            
+                            step = WorkflowStep(
+                                id=step_data.get("id", ""),
+                                agent_id=step_data.get("agent_id", ""),
+                                input_mapping=step_data.get("input_mapping", {}),
+                                output_mapping=step_data.get("output_mapping", {}),
+                                condition=condition,
+                                timeout=step_data.get("timeout", 30),
+                                retry_attempts=step_data.get("retry_attempts", 3),
+                            )
+                            steps.append(step)
+                        
                         workflow = Workflow(
                             id=workflow_data.get("id", workflow_file.stem),
                             name=workflow_data.get("name", ""),
-                            steps=[],  # Would need to reconstruct WorkflowStep objects
+                            steps=steps,
                         )
                         workflows.append(workflow)
                     except Exception as e:
@@ -292,10 +333,33 @@ class Blueprint:
         if "workflows" in data and isinstance(data["workflows"], list):
             for workflow_data in data["workflows"]:
                 try:
+                    from agent_factory.core.workflow import WorkflowStep, Condition
+                    
+                    steps = []
+                    for step_data in workflow_data.get("steps", []):
+                        condition = None
+                        if step_data.get("condition"):
+                            cond_data = step_data["condition"]
+                            condition = Condition(
+                                expression=cond_data.get("expression", ""),
+                                description=cond_data.get("description"),
+                            )
+                        
+                        step = WorkflowStep(
+                            id=step_data.get("id", ""),
+                            agent_id=step_data.get("agent_id", ""),
+                            input_mapping=step_data.get("input_mapping", {}),
+                            output_mapping=step_data.get("output_mapping", {}),
+                            condition=condition,
+                            timeout=step_data.get("timeout", 30),
+                            retry_attempts=step_data.get("retry_attempts", 3),
+                        )
+                        steps.append(step)
+                    
                     workflow = Workflow(
                         id=workflow_data.get("id", ""),
                         name=workflow_data.get("name", ""),
-                        steps=[],
+                        steps=steps,
                     )
                     workflows.append(workflow)
                 except Exception as e:
@@ -334,7 +398,18 @@ class Blueprint:
         )
     
     def _generate_readme(self) -> str:
-        """Generate README for blueprint."""
+        """
+        Generate README for blueprint.
+        
+        Returns:
+            README content as string
+        """
+        env_vars_section = ""
+        if self.config.environment_variables:
+            env_vars_section = "\n## Configuration\n\nRequired environment variables:\n" + "\n".join(
+                f"- `{k}`: {v}" for k, v in self.config.environment_variables.items()
+            )
+        
         return f"""# {self.name}
 
 {self.description}
@@ -352,12 +427,7 @@ class Blueprint:
 ```bash
 agent-factory blueprint install {self.id}
 ```
-
-## Configuration
-
-Required environment variables:
-{chr(10).join(f"- `{k}`: {v}" for k, v in self.config.environment_variables.items())}
-
+{env_vars_section}
 ## Usage
 
 [Usage instructions would go here]
@@ -368,7 +438,12 @@ Required environment variables:
 """
     
     def _generate_env_example(self) -> str:
-        """Generate .env.example file."""
+        """
+        Generate .env.example file content.
+        
+        Returns:
+            .env.example content as string
+        """
         lines = ["# Blueprint Configuration", ""]
         for key, description in self.config.environment_variables.items():
             lines.append(f"# {description}")

@@ -6,6 +6,7 @@ import tempfile
 from agent_factory.core.blueprint import Blueprint, PricingModel, PricingInfo, BlueprintConfig
 
 
+@pytest.mark.unit
 def test_blueprint_creation():
     """Test creating a blueprint."""
     blueprint = Blueprint(
@@ -21,6 +22,7 @@ def test_blueprint_creation():
     assert blueprint.version == "1.0.0"
 
 
+@pytest.mark.unit
 def test_blueprint_pricing():
     """Test blueprint pricing."""
     pricing = PricingInfo(
@@ -43,6 +45,7 @@ def test_blueprint_pricing():
     assert blueprint.pricing.price == 99.0
 
 
+@pytest.mark.unit
 def test_blueprint_package():
     """Test blueprint packaging."""
     blueprint = Blueprint(
@@ -60,6 +63,7 @@ def test_blueprint_package():
         assert (Path(package_path) / "blueprint.yaml").exists()
 
 
+@pytest.mark.unit
 def test_blueprint_install():
     """Test blueprint installation."""
     blueprint = Blueprint(

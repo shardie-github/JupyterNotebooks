@@ -41,12 +41,16 @@ setup_rate_limiting(
     requests_per_hour=int(os.getenv("RATE_LIMIT_PER_HOUR", "1000"))
 )
 
-# Initialize database
-try:
-    init_db()
-    logger.info("Database initialized")
-except Exception as e:
-    logger.error("Failed to initialize database", error=str(e))
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on application startup."""
+    try:
+        init_db()
+        logger.info("Database initialized")
+    except Exception as e:
+        logger.error("Failed to initialize database", error=str(e))
+
 
 # Include routers
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["agents"])
@@ -54,6 +58,11 @@ app.include_router(tools.router, prefix="/api/v1/tools", tags=["tools"])
 app.include_router(workflows.router, prefix="/api/v1/workflows", tags=["workflows"])
 app.include_router(blueprints.router, prefix="/api/v1/blueprints", tags=["blueprints"])
 app.include_router(executions.router, prefix="/api/v1/executions", tags=["executions"])
+
+# Additional routers
+from agent_factory.api.routes import scheduler, payments
+app.include_router(scheduler.router, prefix="/api/v1/scheduler", tags=["scheduler"])
+app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 
 
 @app.middleware("http")

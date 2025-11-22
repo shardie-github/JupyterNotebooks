@@ -1,9 +1,11 @@
 """Tests for Agent class."""
 
 import pytest
+from unittest.mock import patch, Mock
 from agent_factory.core.agent import Agent, AgentConfig, AgentStatus
 
 
+@pytest.mark.unit
 def test_agent_creation():
     """Test creating an agent."""
     agent = Agent(
@@ -18,6 +20,7 @@ def test_agent_creation():
     assert agent.model == "gpt-4o"
 
 
+@pytest.mark.unit
 def test_agent_with_tools():
     """Test agent with tools."""
     from agent_factory.core.tool import Tool
@@ -43,6 +46,7 @@ def test_agent_with_tools():
     assert agent.tools[0].id == "dummy-tool"
 
 
+@pytest.mark.unit
 def test_agent_add_tool():
     """Test adding a tool to an agent."""
     from agent_factory.core.tool import Tool
@@ -67,6 +71,7 @@ def test_agent_add_tool():
     assert len(agent.tools) == 1
 
 
+@pytest.mark.unit
 def test_agent_serialization():
     """Test agent serialization."""
     agent = Agent(
@@ -82,6 +87,7 @@ def test_agent_serialization():
     assert data["instructions"] == "Test"
 
 
+@pytest.mark.unit
 def test_agent_deserialization():
     """Test agent deserialization."""
     data = {
@@ -102,3 +108,31 @@ def test_agent_deserialization():
     assert agent.id == "test-agent"
     assert agent.name == "Test Agent"
     assert agent.instructions == "Test"
+
+
+@pytest.mark.unit
+@patch('agent_factory.integrations.openai_client.OpenAIAgentClient')
+def test_agent_run_with_mocked_client(mock_client_class):
+    """Test agent.run() with mocked OpenAI client."""
+    # Setup mock
+    mock_client = Mock()
+    mock_client.run_agent.return_value = {
+        "output": "Mocked response",
+        "tool_calls": [],
+        "tokens_used": 100,
+        "model": "gpt-4o",
+    }
+    mock_client_class.return_value = mock_client
+    
+    agent = Agent(
+        id="test-agent",
+        name="Test Agent",
+        instructions="You are a test agent.",
+    )
+    
+    result = agent.run("Test input")
+    
+    assert result.status == AgentStatus.COMPLETED
+    assert result.output == "Mocked response"
+    assert result.tokens_used == 0  # Not set in current implementation
+    mock_client.run_agent.assert_called_once()

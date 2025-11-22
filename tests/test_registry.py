@@ -7,6 +7,7 @@ from agent_factory.registry.local_registry import LocalRegistry
 from agent_factory.core.agent import Agent
 
 
+@pytest.mark.unit
 def test_local_registry_creation():
     """Test creating a local registry."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -17,6 +18,7 @@ def test_local_registry_creation():
         assert (Path(tmpdir) / "tools").exists()
 
 
+@pytest.mark.unit
 def test_local_registry_agent_operations():
     """Test agent operations in local registry."""
     with tempfile.TemporaryDirectory() as tmpdir:

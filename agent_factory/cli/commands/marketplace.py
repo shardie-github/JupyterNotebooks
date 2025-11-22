@@ -71,3 +71,52 @@ def details(blueprint_id: str):
     typer.echo(f"Pricing: {details['pricing_model']} - ${details['price']:.2f}")
     typer.echo(f"Rating: {details['rating']:.1f} ({details['reviews_count']} reviews)")
     typer.echo(f"Downloads: {details['downloads']}")
+
+
+@app.command()
+def install(
+    blueprint_id: str = typer.Argument(..., help="Blueprint ID"),
+    target_path: str = typer.Option(".", "--path", "-p", help="Installation path"),
+):
+    """Install a blueprint from marketplace."""
+    from agent_factory.registry.remote_registry import RemoteRegistry
+    
+    registry = RemoteRegistry()
+    
+    try:
+        success = registry.install_blueprint(blueprint_id, target_path)
+        if success:
+            typer.echo(f"✅ Installed blueprint from marketplace: {blueprint_id}")
+        else:
+            typer.echo(f"❌ Installation failed: {blueprint_id}")
+            raise typer.Exit(1)
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def unpublish(
+    blueprint_id: str = typer.Argument(..., help="Blueprint ID"),
+):
+    """Unpublish a blueprint from marketplace."""
+    from agent_factory.marketplace.publishing import unpublish_blueprint
+    
+    try:
+        result = unpublish_blueprint(
+            blueprint_id=blueprint_id,
+            publisher_id="cli-user"  # In production, get from auth
+        )
+        typer.echo(f"✅ Unpublished blueprint: {result['id']}")
+    except Exception as e:
+        typer.echo(f"❌ Unpublishing failed: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def my_blueprints():
+    """List my published blueprints."""
+    # In production, would fetch from database filtered by user
+    typer.echo("My Published Blueprints:")
+    typer.echo("💡 This feature requires authentication integration")
+    typer.echo("   Use 'agent-factory blueprint list' to see local blueprints")

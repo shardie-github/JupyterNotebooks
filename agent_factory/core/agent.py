@@ -196,6 +196,16 @@ class Agent:
     def _execute_agent(self, input_text: str, context: Dict[str, Any]) -> str:
         """
         Execute the agent using the underlying LLM SDK.
+        
+        Args:
+            input_text: User input text
+            context: Context dictionary
+            
+        Returns:
+            Agent output text
+            
+        Raises:
+            RuntimeError: If execution fails
         """
         try:
             from agent_factory.integrations.openai_client import OpenAIAgentClient
@@ -211,12 +221,13 @@ class Agent:
                 context=context,
             )
             
-            return result["output"]
+            return result.get("output", "")
         except ImportError:
             # Fallback if OpenAI SDK not available
             return f"[Agent {self.name} would process: {input_text}]"
         except Exception as e:
-            raise RuntimeError(f"Agent execution failed: {str(e)}")
+            from agent_factory.core.exceptions import AgentExecutionError
+            raise AgentExecutionError(f"Agent execution failed: {str(e)}") from e
     
     def handoff(
         self,
