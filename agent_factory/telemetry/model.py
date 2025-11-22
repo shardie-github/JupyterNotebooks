@@ -53,10 +53,10 @@ class TelemetryEvent:
         }
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AgentRunEvent(TelemetryEvent):
     """Telemetry event for agent execution."""
-    agent_id: str
+    agent_id: str  # Required field
     agent_name: Optional[str] = None
     session_id: Optional[str] = None
     status: str = "completed"  # completed, failed, timeout
@@ -87,10 +87,10 @@ class AgentRunEvent(TelemetryEvent):
         return base
 
 
-@dataclass
+@dataclass(kw_only=True)
 class WorkflowRunEvent(TelemetryEvent):
     """Telemetry event for workflow execution."""
-    workflow_id: str
+    workflow_id: str  # Required field
     workflow_name: Optional[str] = None
     status: str = "completed"  # completed, failed, timeout
     execution_time: float = 0.0
@@ -119,10 +119,10 @@ class WorkflowRunEvent(TelemetryEvent):
         return base
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BlueprintInstallEvent(TelemetryEvent):
     """Telemetry event for blueprint installation."""
-    blueprint_id: str
+    blueprint_id: str  # Required field
     blueprint_name: Optional[str] = None
     blueprint_version: Optional[str] = None
     install_type: str = "install"  # install, uninstall
@@ -143,11 +143,11 @@ class BlueprintInstallEvent(TelemetryEvent):
         return base
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ErrorEvent(TelemetryEvent):
     """Telemetry event for errors."""
-    error_type: str
-    error_message: str
+    error_type: str  # Required field
+    error_message: str  # Required field
     resource_type: Optional[str] = None  # agent, workflow, blueprint, etc.
     resource_id: Optional[str] = None
     stack_trace: Optional[str] = None
@@ -169,11 +169,11 @@ class ErrorEvent(TelemetryEvent):
         return base
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BillingUsageEvent(TelemetryEvent):
     """Telemetry event for billing usage tracking."""
-    billing_unit: str  # agent_run, workflow_run, token, blueprint_install
-    quantity: float
+    billing_unit: str  # Required field
+    quantity: float  # Required field
     unit_price: float = 0.0
     total_cost: float = 0.0
     currency: str = "USD"

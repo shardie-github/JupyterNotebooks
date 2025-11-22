@@ -457,19 +457,19 @@ React-based UI for {agent.name} agent.
 
 ## Setup
 
-\`\`\`bash
+```bash
 npm install
 npm start
-\`\`\`
+```
 
 ## Build
 
-\`\`\`bash
+```bash
 npm run build
-\`\`\`
+```
 
 ## Configuration
 
-Update the API endpoint in \`src/App.js\` if needed.
+Update the API endpoint in `src/App.js` if needed.
 """
     (output_path / "README.md").write_text(readme)
