@@ -39,19 +39,23 @@ class OpenAIAgentClient:
         context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Run an agent using OpenAI API.
+        Run an agent using OpenAI API with circuit breaker protection.
         
         Args:
             instructions: System instructions for the agent
             input_text: User input
-            model: Model to use
-            tools: List of tools available to the agent
-            temperature: Temperature setting
-            max_tokens: Maximum tokens
-            context: Optional conversation context
+            model: Model to use (default: "gpt-4o")
+            tools: List of tools available to the agent (optional)
+            temperature: Temperature setting (default: 0.7)
+            max_tokens: Maximum tokens (default: 2000)
+            context: Optional conversation context (optional)
             
         Returns:
-            Dictionary with output and metadata
+            Dictionary with output, tool_calls, tokens_used, and model
+            
+        Raises:
+            ValueError: If API key is not configured
+            Exception: If API call fails (wrapped by circuit breaker)
         """
         # Convert tools to OpenAI format
         openai_tools = []
@@ -79,8 +83,20 @@ class OpenAIAgentClient:
         # Add user input
         messages.append({"role": "user", "content": input_text})
         
-        # Call OpenAI API
-        response = self.client.chat.completions.create(
+        # Call OpenAI API with circuit breaker protection
+        from agent_factory.security.circuit_breaker import get_circuit_breaker, CircuitBreakerConfig
+        
+        breaker = get_circuit_breaker(
+            "openai_api",
+            config=CircuitBreakerConfig(
+                failure_threshold=5,
+                success_threshold=2,
+                timeout=60.0,
+            )
+        )
+        
+        response = breaker.call(
+            self.client.chat.completions.create,
             model=model,
             messages=messages,
             tools=openai_tools if openai_tools else None,

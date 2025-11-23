@@ -11,6 +11,7 @@ from agent_factory.security import setup_rate_limiting
 from agent_factory.database import init_db
 from agent_factory.cache import get_cache
 from agent_factory.api.routes import agents, tools, workflows, blueprints, executions, telemetry
+from agent_factory.api.middleware import SecurityHeadersMiddleware, RequestIDMiddleware, TimingMiddleware
 
 # Setup structured logging
 logger = setup_structured_logging(os.getenv("LOG_LEVEL", "INFO"))
@@ -41,6 +42,15 @@ setup_rate_limiting(
     requests_per_hour=int(os.getenv("RATE_LIMIT_PER_HOUR", "1000"))
 )
 
+# Add security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Add request ID middleware for tracing
+app.add_middleware(RequestIDMiddleware)
+
+# Add timing middleware
+app.add_middleware(TimingMiddleware)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -67,9 +77,10 @@ app.include_router(executions.router, prefix="/api/v1/executions", tags=["execut
 app.include_router(telemetry.router, prefix="/api/v1/telemetry", tags=["telemetry"])
 
 # Additional routers
-from agent_factory.api.routes import scheduler, payments
+from agent_factory.api.routes import scheduler, payments, health as health_routes
 app.include_router(scheduler.router, prefix="/api/v1/scheduler", tags=["scheduler"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
+app.include_router(health_routes.router, prefix="/api/v1/health", tags=["health"])
 
 
 @app.middleware("http")
