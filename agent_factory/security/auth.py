@@ -9,7 +9,16 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+# JWT Secret Key - MUST be set in production
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    import warnings
+    warnings.warn(
+        "JWT_SECRET_KEY not set. Using insecure default. "
+        "Set JWT_SECRET_KEY environment variable in production!",
+        UserWarning
+    )
+    SECRET_KEY = "your-secret-key-change-in-production"  # Insecure default for development only
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

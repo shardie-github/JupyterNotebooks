@@ -9,7 +9,7 @@ import yaml
 import json
 from pathlib import Path
 
-from agent_factory.core.agent import Agent
+from agent_factory.agents.agent import Agent
 from agent_factory.core.tool import Tool
 from agent_factory.core.workflow import Workflow
 
@@ -238,7 +238,7 @@ class Blueprint:
         Returns:
             Blueprint instance
         """
-        from agent_factory.core.agent import Agent
+        from agent_factory.agents.agent import Agent
         from agent_factory.core.workflow import Workflow
         
         # Load agents

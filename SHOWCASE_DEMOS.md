@@ -119,18 +119,14 @@ print(result.output)
 ### Agent with Tools
 
 ```python
-from agent_factory import Agent, function_tool
-
-@function_tool
-def calculate(expression: str) -> float:
-    """Calculate mathematical expressions."""
-    return eval(expression)
+from agent_factory import Agent
+from agent_factory.integrations.tools.calculator import calculator
 
 agent = Agent(
     id="calculator-agent",
     name="Calculator Agent",
     instructions="You are a calculator assistant.",
-    tools=[calculate]
+    tools=[calculator]
 )
 
 result = agent.run("What is 15 * 23?")

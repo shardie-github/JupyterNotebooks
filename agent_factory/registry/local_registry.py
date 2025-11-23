@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Any
 import json
 import yaml
 
-from agent_factory.core.agent import Agent
+from agent_factory.agents.agent import Agent
 from agent_factory.core.tool import Tool
 from agent_factory.core.workflow import Workflow
 from agent_factory.core.blueprint import Blueprint

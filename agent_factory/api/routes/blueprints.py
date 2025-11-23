@@ -77,7 +77,7 @@ async def create_blueprint(
     # Load agents, tools, workflows from data
     agents = []
     if blueprint_data.agents:
-        from agent_factory.core.agent import Agent
+        from agent_factory.agents.agent import Agent
         for agent_data in blueprint_data.agents:
             try:
                 agents.append(Agent.from_dict(agent_data))

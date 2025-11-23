@@ -30,7 +30,7 @@ from agent_factory.core.guardrails import Guardrails, Guardrail, GuardrailResult
 def __getattr__(name: str):
     """Lazy import for Agent, Tool, Workflow classes to avoid circular imports."""
     if name in ("Agent", "AgentConfig", "AgentResult", "AgentStatus", "Handoff"):
-        from agent_factory.core.agent import (
+        from agent_factory.agents.agent import (
             Agent, AgentConfig, AgentResult, AgentStatus, Handoff
         )
         if name == "Agent":

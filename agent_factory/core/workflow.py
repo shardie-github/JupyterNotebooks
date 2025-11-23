@@ -337,13 +337,35 @@ class Workflow:
             tree = ast.parse(expression, mode='eval')
             result = eval_node(tree.body)
             return bool(result)
-        except Exception:
-            # Fallback to simple string replacement
-            for key, value in context.items():
-                expression = expression.replace(f"${key}", str(value))
+        except Exception as e:
+            # If AST parsing fails, try simple string replacement and basic comparison
+            # This is safer than eval() - only supports simple variable substitution
             try:
-                return bool(eval(expression, {"__builtins__": {}}))
-            except:
+                # Replace $variable references
+                modified_expr = expression
+                for key, value in context.items():
+                    modified_expr = modified_expr.replace(f"${key}", str(value))
+                    modified_expr = modified_expr.replace(f"${{{key}}}", str(value))
+                
+                # Only allow simple comparisons with numbers/booleans
+                # This is much safer than eval()
+                if "==" in modified_expr:
+                    parts = modified_expr.split("==")
+                    if len(parts) == 2:
+                        left = parts[0].strip()
+                        right = parts[1].strip()
+                        try:
+                            # Try to convert to numbers for comparison
+                            left_val = float(left) if left.replace('.', '').replace('-', '').isdigit() else left
+                            right_val = float(right) if right.replace('.', '').replace('-', '').isdigit() else right
+                            return left_val == right_val
+                        except ValueError:
+                            return left == right
+                
+                # If we can't safely evaluate, return False (fail closed)
+                return False
+            except Exception:
+                # Fail closed - if we can't safely evaluate, assume condition is False
                 return False
     
     def to_dict(self) -> Dict[str, Any]:

@@ -179,5 +179,5 @@ def run(
         try:
             from agent_factory import __version__
             typer.echo(f"  Agent Factory: {__version__}")
-        except:
-            pass
+        except (ImportError, AttributeError):
+            typer.echo("  Agent Factory: version unknown")

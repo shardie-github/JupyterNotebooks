@@ -121,18 +121,14 @@ pip install agent-factory
 ### Your First Agent (30 seconds)
 
 ```python
-from agent_factory import Agent, function_tool
-
-@function_tool
-def calculate(expression: str) -> float:
-    """Calculate mathematical expressions."""
-    return eval(expression)
+from agent_factory import Agent
+from agent_factory.integrations.tools.calculator import calculator
 
 agent = Agent(
     id="calculator",
     name="Calculator Agent",
     instructions="You are a helpful calculator assistant.",
-    tools=[calculate],
+    tools=[calculator],
 )
 
 result = agent.run("What's 15% tip on $87.50?")

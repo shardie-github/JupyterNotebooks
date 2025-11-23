@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List, Optional
 from pydantic import BaseModel
 
-from agent_factory.core.agent import Agent
+from agent_factory.agents.agent import Agent
 from agent_factory.registry.local_registry import LocalRegistry
 from agent_factory.runtime.engine import RuntimeEngine
 
@@ -29,17 +29,22 @@ class AgentRun(BaseModel):
 @router.post("/", response_model=dict)
 def create_agent(agent_data: AgentCreate):
     """Create a new agent."""
-    agent = Agent(
-        id=agent_data.id,
-        name=agent_data.name,
-        instructions=agent_data.instructions,
-        model=agent_data.model,
-    )
-    
-    registry.register_agent(agent)
-    runtime.register_agent(agent)
-    
-    return {"id": agent.id, "status": "created"}
+    try:
+        agent = Agent(
+            id=agent_data.id,
+            name=agent_data.name,
+            instructions=agent_data.instructions,
+            model=agent_data.model,
+        )
+        
+        registry.register_agent(agent)
+        runtime.register_agent(agent)
+        
+        return {"id": agent.id, "status": "created"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create agent: {str(e)}")
 
 
 @router.get("/", response_model=List[dict])
@@ -75,18 +80,21 @@ def run_agent(agent_id: str, run_data: AgentRun):
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
     
-    result = agent.run(
-        run_data.input_text,
-        session_id=run_data.session_id,
-        context=run_data.context,
-    )
-    
-    return {
-        "output": result.output,
-        "status": result.status.value,
-        "execution_time": result.execution_time,
-        "error": result.error,
-    }
+    try:
+        result = agent.run(
+            run_data.input_text,
+            session_id=run_data.session_id,
+            context=run_data.context,
+        )
+        
+        return {
+            "output": result.output,
+            "status": result.status.value,
+            "execution_time": result.execution_time,
+            "error": result.error,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Agent execution failed: {str(e)}")
 
 
 @router.delete("/{agent_id}")
