@@ -2,8 +2,8 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-from agent_factory.core.workflow import Workflow, WorkflowStep
-from agent_factory.core.agent import Agent, AgentStatus
+from agent_factory.workflows.model import Workflow, WorkflowStep
+from agent_factory.agents.agent import Agent, AgentStatus
 
 
 @pytest.mark.integration

@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import patch, Mock
-from agent_factory.core.agent import Agent, AgentConfig, AgentStatus
+from agent_factory.agents.agent import Agent, AgentConfig, AgentStatus
 
 
 @pytest.mark.unit
@@ -23,7 +23,7 @@ def test_agent_creation():
 @pytest.mark.unit
 def test_agent_with_tools():
     """Test agent with tools."""
-    from agent_factory.core.tool import Tool
+    from agent_factory.tools.base import Tool
     
     def dummy_tool(x: str) -> str:
         return f"Processed: {x}"
@@ -49,7 +49,7 @@ def test_agent_with_tools():
 @pytest.mark.unit
 def test_agent_add_tool():
     """Test adding a tool to an agent."""
-    from agent_factory.core.tool import Tool
+    from agent_factory.tools.base import Tool
     
     def dummy_tool(x: str) -> str:
         return f"Processed: {x}"

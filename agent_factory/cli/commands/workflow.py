@@ -4,7 +4,7 @@ import typer
 import json
 from typing import Optional
 
-from agent_factory.core.workflow import Workflow, WorkflowStep
+from agent_factory.workflows.model import Workflow, WorkflowStep
 from agent_factory.registry.local_registry import LocalRegistry
 from agent_factory.runtime.engine import RuntimeEngine
 
@@ -119,7 +119,7 @@ def update(
         with open(steps_file) as f:
             steps_data = json.load(f)
         
-        from agent_factory.core.workflow import WorkflowStep, Condition
+        from agent_factory.workflows.model import WorkflowStep, Condition
         
         steps = []
         for step_data in steps_data:

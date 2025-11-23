@@ -4,7 +4,7 @@ import pytest
 import tempfile
 from pathlib import Path
 from agent_factory.registry.local_registry import LocalRegistry
-from agent_factory.core.agent import Agent
+from agent_factory.agents.agent import Agent
 
 
 @pytest.mark.unit

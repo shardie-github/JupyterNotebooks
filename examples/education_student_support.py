@@ -7,7 +7,7 @@ for higher education institutions using Agent Factory Platform.
 Designed for McGraw Hill Education partnership institutions.
 """
 
-from agent_factory.core.agent import Agent
+from agent_factory.agents.agent import Agent
 from agent_factory.integrations.tools.web_search import web_search
 from agent_factory.integrations.tools.file_io import read_file, write_file
 

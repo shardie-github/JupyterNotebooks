@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
 from agent_factory.registry.local_registry import LocalRegistry
-from agent_factory.core.tool import Tool
+from agent_factory.tools.base import Tool
 from agent_factory.security.auth import get_current_user
 from agent_factory.security.rbac import require_permission, Permission
 
@@ -64,7 +64,7 @@ async def create_tool(
     )
     
     if tool_data.metadata:
-        from agent_factory.core.tool import ToolMetadata
+        from agent_factory.tools.base import ToolMetadata
         tool.metadata = ToolMetadata(
             id=tool.id,
             name=tool.name,

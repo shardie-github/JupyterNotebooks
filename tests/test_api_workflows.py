@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch
 
 from agent_factory.api.main import app
-from agent_factory.core.workflow import Workflow
+from agent_factory.workflows.model import Workflow
 
 client = TestClient(app)
 

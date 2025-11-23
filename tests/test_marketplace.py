@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock, patch
 
 from agent_factory.marketplace import search_blueprints, get_blueprint_details, publish_blueprint
-from agent_factory.core.blueprint import Blueprint
+from agent_factory.blueprints.model import Blueprint
 
 
 @pytest.mark.unit

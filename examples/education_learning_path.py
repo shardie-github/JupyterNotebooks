@@ -7,7 +7,7 @@ generator for adaptive learning programs in higher education.
 Designed for McGraw Hill Education partnership institutions.
 """
 
-from agent_factory.core.agent import Agent
+from agent_factory.agents.agent import Agent
 from agent_factory.integrations.tools.web_search import web_search
 from agent_factory.integrations.tools.calculator import calculator
 

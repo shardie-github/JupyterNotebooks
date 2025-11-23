@@ -5,10 +5,10 @@ from typing import Optional
 from pathlib import Path
 
 from agent_factory.registry.local_registry import LocalRegistry
-from agent_factory.core.agent import Agent
-from agent_factory.core.tool import Tool
-from agent_factory.core.workflow import Workflow
-from agent_factory.core.blueprint import Blueprint
+from agent_factory.agents.agent import Agent
+from agent_factory.tools.base import Tool
+from agent_factory.workflows.model import Workflow
+from agent_factory.blueprints.model import Blueprint
 
 app = typer.Typer(name="registry", help="Manage registry")
 

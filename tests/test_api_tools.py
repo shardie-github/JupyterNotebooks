@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch
 
 from agent_factory.api.main import app
-from agent_factory.core.tool import Tool
+from agent_factory.tools.base import Tool
 
 client = TestClient(app)
 

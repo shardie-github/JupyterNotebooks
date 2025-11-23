@@ -1,7 +1,7 @@
 """Blueprint publishing functionality."""
 
 from typing import Optional, Dict, Any
-from agent_factory.core.blueprint import Blueprint
+from agent_factory.blueprints.model import Blueprint
 from agent_factory.database.models import Blueprint as BlueprintModel
 from agent_factory.database.session import get_db
 from agent_factory.security.audit import audit_log

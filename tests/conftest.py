@@ -4,9 +4,9 @@ import pytest
 from unittest.mock import Mock, MagicMock
 from typing import Dict, Any
 
-from agent_factory.core.agent import Agent, AgentConfig
-from agent_factory.core.tool import Tool
-from agent_factory.core.workflow import Workflow, WorkflowStep
+from agent_factory.agents.agent import Agent, AgentConfig
+from agent_factory.tools.base import Tool
+from agent_factory.workflows.model import Workflow, WorkflowStep
 from agent_factory.core.memory import MemoryStore
 from agent_factory.core.guardrails import Guardrails
 

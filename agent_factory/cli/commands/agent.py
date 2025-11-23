@@ -3,7 +3,7 @@
 import typer
 from typing import Optional
 
-from agent_factory.core.agent import Agent
+from agent_factory.agents.agent import Agent
 from agent_factory.registry.local_registry import LocalRegistry
 
 app = typer.Typer(name="agent", help="Manage agents")

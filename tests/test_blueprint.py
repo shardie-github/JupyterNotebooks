@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 import tempfile
-from agent_factory.core.blueprint import Blueprint, PricingModel, PricingInfo, BlueprintConfig
+from agent_factory.blueprints.model import Blueprint, BlueprintConfig
 
 
 @pytest.mark.unit

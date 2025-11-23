@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
-from agent_factory.core.workflow import Workflow, WorkflowStep, Trigger, TriggerType, Condition
+from agent_factory.workflows.model import Workflow, WorkflowStep, Trigger, TriggerType, Condition
 from agent_factory.registry.local_registry import LocalRegistry
 from agent_factory.runtime.engine import RuntimeEngine
 from agent_factory.security.auth import get_current_user

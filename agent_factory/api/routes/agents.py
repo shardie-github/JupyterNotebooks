@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List, Optional
 from pydantic import BaseModel
 
-from agent_factory.core.agent import Agent
+from agent_factory.agents.agent import Agent
 from agent_factory.registry.local_registry import LocalRegistry
 from agent_factory.runtime.engine import RuntimeEngine
 

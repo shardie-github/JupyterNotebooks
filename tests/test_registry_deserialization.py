@@ -6,8 +6,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from agent_factory.registry.local_registry import LocalRegistry
-from agent_factory.core.tool import Tool
-from agent_factory.core.workflow import Workflow, WorkflowStep
+from agent_factory.tools.base import Tool
+from agent_factory.workflows.model import Workflow, WorkflowStep
 
 
 @pytest.mark.unit

@@ -6,11 +6,13 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 import json
 import yaml
+import os
 
-from agent_factory.core.agent import Agent
-from agent_factory.core.tool import Tool
-from agent_factory.core.workflow import Workflow
-from agent_factory.core.blueprint import Blueprint
+from agent_factory.agents.agent import Agent
+from agent_factory.tools.base import Tool
+from agent_factory.workflows.model import Workflow
+from agent_factory.blueprints.model import Blueprint
+from agent_factory.cache import get_cache
 
 
 class LocalRegistry:
@@ -38,32 +40,69 @@ class LocalRegistry:
         (self.base_path / "tools").mkdir(exist_ok=True)
         (self.base_path / "workflows").mkdir(exist_ok=True)
         (self.base_path / "blueprints").mkdir(exist_ok=True)
+        
+        # Initialize cache
+        self.cache = get_cache()
+        self.cache_ttl = int(os.getenv("REGISTRY_CACHE_TTL", "3600"))  # 1 hour default
     
     # Agent methods
     def register_agent(self, agent: Agent) -> None:
         """Register an agent in the registry."""
         agent_file = self.base_path / "agents" / f"{agent.id}.json"
         agent_file.write_text(json.dumps(agent.to_dict(), indent=2))
+        
+        # Invalidate cache
+        self.cache.delete(f"agent:{agent.id}")
+        self.cache.delete("agents:list")
     
     def get_agent(self, agent_id: str) -> Optional[Agent]:
-        """Get an agent by ID."""
+        """Get an agent by ID with caching."""
+        cache_key = f"agent:{agent_id}"
+        
+        # Try cache first
+        cached_data = self.cache.get(cache_key)
+        if cached_data:
+            return Agent.from_dict(cached_data)
+        
+        # Load from file
         agent_file = self.base_path / "agents" / f"{agent_id}.json"
         if not agent_file.exists():
             return None
         
         data = json.loads(agent_file.read_text())
-        return Agent.from_dict(data)
+        agent = Agent.from_dict(data)
+        
+        # Cache the agent data
+        self.cache.set(cache_key, data, ttl=self.cache_ttl)
+        
+        return agent
     
     def list_agents(self) -> List[str]:
-        """List all registered agent IDs."""
+        """List all registered agent IDs with caching."""
+        cache_key = "agents:list"
+        
+        # Try cache first
+        cached_list = self.cache.get(cache_key)
+        if cached_list:
+            return cached_list
+        
+        # Load from filesystem
         agents_dir = self.base_path / "agents"
-        return [f.stem for f in agents_dir.glob("*.json")]
+        agent_list = [f.stem for f in agents_dir.glob("*.json")]
+        
+        # Cache the list
+        self.cache.set(cache_key, agent_list, ttl=self.cache_ttl)
+        
+        return agent_list
     
     def delete_agent(self, agent_id: str) -> bool:
         """Delete an agent from the registry."""
         agent_file = self.base_path / "agents" / f"{agent_id}.json"
         if agent_file.exists():
             agent_file.unlink()
+            # Invalidate cache
+            self.cache.delete(f"agent:{agent_id}")
+            self.cache.delete("agents:list")
             return True
         return False
     
@@ -72,10 +111,14 @@ class LocalRegistry:
         """Register a tool in the registry."""
         tool_file = self.base_path / "tools" / f"{tool.id}.json"
         tool_file.write_text(json.dumps(tool.to_dict(), indent=2))
+        
+        # Invalidate cache
+        self.cache.delete(f"tool:{tool.id}")
+        self.cache.delete("tools:list")
     
     def get_tool(self, tool_id: str) -> Optional[Tool]:
         """
-        Get a tool by ID.
+        Get a tool by ID with caching.
         
         Args:
             tool_id: Tool ID
@@ -83,6 +126,21 @@ class LocalRegistry:
         Returns:
             Tool instance or None
         """
+        cache_key = f"tool:{tool_id}"
+        
+        # Try cache first
+        cached_data = self.cache.get(cache_key)
+        if cached_data:
+            # Reconstruct tool from cached data
+            def placeholder_implementation(**kwargs):
+                raise NotImplementedError(f"Tool {tool_id} implementation not available.")
+            return Tool(
+                id=cached_data.get("id", tool_id),
+                name=cached_data.get("name", tool_id),
+                description=cached_data.get("description", ""),
+                implementation=placeholder_implementation,
+            )
+        
         tool_file = self.base_path / "tools" / f"{tool_id}.json"
         if not tool_file.exists():
             return None
@@ -115,7 +173,7 @@ class LocalRegistry:
             
             # Restore metadata if available
             if "metadata" in data:
-                from agent_factory.core.tool import ToolMetadata, ParameterSchema
+                from agent_factory.tools.base import ToolMetadata, ParameterSchema
                 metadata_dict = data["metadata"]
                 
                 # Reconstruct parameter schemas
@@ -130,16 +188,19 @@ class LocalRegistry:
                             default=param_data.get("default"),
                         )
                 
-                tool.metadata = ToolMetadata(
-                    id=tool.id,
-                    name=tool.name,
-                    description=tool.description,
-                    version=metadata_dict.get("version", "1.0.0"),
-                    author=metadata_dict.get("author", "unknown"),
-                    category=metadata_dict.get("category", "general"),
-                    parameters=param_schemas,
-                    tags=metadata_dict.get("tags", []),
-                )
+            tool.metadata = ToolMetadata(
+                id=tool.id,
+                name=tool.name,
+                description=tool.description,
+                version=metadata_dict.get("version", "1.0.0"),
+                author=metadata_dict.get("author", "unknown"),
+                category=metadata_dict.get("category", "general"),
+                parameters=param_schemas,
+                tags=metadata_dict.get("tags", []),
+            )
+            
+            # Cache the tool data
+            self.cache.set(cache_key, data, ttl=self.cache_ttl)
             
             return tool
         except Exception as e:
@@ -149,19 +210,36 @@ class LocalRegistry:
             return None
     
     def list_tools(self) -> List[str]:
-        """List all registered tool IDs."""
+        """List all registered tool IDs with caching."""
+        cache_key = "tools:list"
+        
+        # Try cache first
+        cached_list = self.cache.get(cache_key)
+        if cached_list:
+            return cached_list
+        
+        # Load from filesystem
         tools_dir = self.base_path / "tools"
-        return [f.stem for f in tools_dir.glob("*.json")]
+        tool_list = [f.stem for f in tools_dir.glob("*.json")]
+        
+        # Cache the list
+        self.cache.set(cache_key, tool_list, ttl=self.cache_ttl)
+        
+        return tool_list
     
     # Workflow methods
     def register_workflow(self, workflow: Workflow) -> None:
         """Register a workflow in the registry."""
         workflow_file = self.base_path / "workflows" / f"{workflow.id}.json"
         workflow_file.write_text(json.dumps(workflow.to_dict(), indent=2))
+        
+        # Invalidate cache
+        self.cache.delete(f"workflow:{workflow.id}")
+        self.cache.delete("workflows:list")
     
     def get_workflow(self, workflow_id: str) -> Optional[Workflow]:
         """
-        Get a workflow by ID.
+        Get a workflow by ID with caching.
         
         Args:
             workflow_id: Workflow ID
@@ -169,15 +247,26 @@ class LocalRegistry:
         Returns:
             Workflow instance or None
         """
-        workflow_file = self.base_path / "workflows" / f"{workflow_id}.json"
-        if not workflow_file.exists():
-            return None
+        cache_key = f"workflow:{workflow_id}"
+        
+        # Try cache first
+        cached_data = self.cache.get(cache_key)
+        if cached_data:
+            data = cached_data
+        else:
+            workflow_file = self.base_path / "workflows" / f"{workflow_id}.json"
+            if not workflow_file.exists():
+                return None
+            
+            try:
+                data = json.loads(workflow_file.read_text())
+            except Exception:
+                return None
         
         try:
-            data = json.loads(workflow_file.read_text())
             
             # Reconstruct workflow steps
-            from agent_factory.core.workflow import WorkflowStep, Trigger, TriggerType, Condition
+            from agent_factory.workflows.model import WorkflowStep, Trigger, TriggerType, Condition
             
             steps = []
             for step_data in data.get("steps", []):
@@ -229,6 +318,10 @@ class LocalRegistry:
                 agents_registry={},  # Will be populated by runtime engine
             )
             
+            # Cache the workflow data
+            if cached_data is None:
+                self.cache.set(cache_key, data, ttl=self.cache_ttl)
+            
             return workflow
         except Exception as e:
             # Log error but don't fail completely
@@ -237,9 +330,22 @@ class LocalRegistry:
             return None
     
     def list_workflows(self) -> List[str]:
-        """List all registered workflow IDs."""
+        """List all registered workflow IDs with caching."""
+        cache_key = "workflows:list"
+        
+        # Try cache first
+        cached_list = self.cache.get(cache_key)
+        if cached_list:
+            return cached_list
+        
+        # Load from filesystem
         workflows_dir = self.base_path / "workflows"
-        return [f.stem for f in workflows_dir.glob("*.json")]
+        workflow_list = [f.stem for f in workflows_dir.glob("*.json")]
+        
+        # Cache the list
+        self.cache.set(cache_key, workflow_list, ttl=self.cache_ttl)
+        
+        return workflow_list
     
     # Blueprint methods
     def register_blueprint(self, blueprint: Blueprint) -> None:
@@ -249,19 +355,52 @@ class LocalRegistry:
         
         # Save blueprint.yaml
         (blueprint_dir / "blueprint.yaml").write_text(blueprint.to_yaml())
+        
+        # Invalidate cache
+        self.cache.delete(f"blueprint:{blueprint.id}")
+        self.cache.delete("blueprints:list")
     
     def get_blueprint(self, blueprint_id: str) -> Optional[Blueprint]:
-        """Get a blueprint by ID."""
+        """Get a blueprint by ID with caching."""
+        cache_key = f"blueprint:{blueprint_id}"
+        
+        # Try cache first
+        cached_data = self.cache.get(cache_key)
+        if cached_data:
+            # Reconstruct from cached YAML string
+            import yaml
+            pack_data = yaml.safe_load(cached_data)
+            return Blueprint.from_dict(pack_data.get("blueprint", {}))
+        
         blueprint_file = self.base_path / "blueprints" / blueprint_id / "blueprint.yaml"
         if not blueprint_file.exists():
             return None
         
-        return Blueprint.from_yaml(str(blueprint_file))
+        blueprint = Blueprint.from_yaml(str(blueprint_file))
+        
+        # Cache the blueprint YAML
+        yaml_content = blueprint_file.read_text()
+        self.cache.set(cache_key, yaml_content, ttl=self.cache_ttl)
+        
+        return blueprint
     
     def list_blueprints(self) -> List[str]:
-        """List all registered blueprint IDs."""
+        """List all registered blueprint IDs with caching."""
+        cache_key = "blueprints:list"
+        
+        # Try cache first
+        cached_list = self.cache.get(cache_key)
+        if cached_list:
+            return cached_list
+        
+        # Load from filesystem
         blueprints_dir = self.base_path / "blueprints"
-        return [d.name for d in blueprints_dir.iterdir() if d.is_dir()]
+        blueprint_list = [d.name for d in blueprints_dir.iterdir() if d.is_dir()]
+        
+        # Cache the list
+        self.cache.set(cache_key, blueprint_list, ttl=self.cache_ttl)
+        
+        return blueprint_list
     
     def search(self, query: str, category: Optional[str] = None) -> Dict[str, List[str]]:
         """

@@ -1,9 +1,9 @@
 """Test utilities and helpers."""
 
 from typing import Dict, Any, List, Optional
-from agent_factory.core.agent import Agent
-from agent_factory.core.tool import Tool
-from agent_factory.core.workflow import Workflow, WorkflowStep
+from agent_factory.agents.agent import Agent
+from agent_factory.tools.base import Tool
+from agent_factory.workflows.model import Workflow, WorkflowStep
 
 
 def create_test_agent(

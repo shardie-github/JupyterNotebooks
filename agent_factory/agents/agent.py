@@ -227,12 +227,49 @@ class Agent:
             return result
     
     def _get_knowledge_context(self, query: str) -> Dict[str, Any]:
-        """Get context from knowledge packs."""
+        """Get context from knowledge packs using RAG retrieval."""
         context = {}
+        
         for pack in self.knowledge_packs:
-            # TODO: Implement actual retrieval from knowledge packs
-            # For now, placeholder
-            context[f"{pack.id}_context"] = f"Knowledge from {pack.name}"
+            try:
+                # Get retriever from knowledge pack
+                if hasattr(pack, 'retriever') and pack.retriever:
+                    # Retrieve relevant documents/chunks
+                    results = pack.retriever.retrieve(query, top_k=pack.retriever_config.get('top_k', 5))
+                    
+                    # Format results as context
+                    if results:
+                        # Combine retrieved text into context
+                        retrieved_texts = []
+                        for result in results:
+                            if isinstance(result, dict):
+                                text = result.get('text', result.get('content', ''))
+                                score = result.get('score', result.get('similarity', 0.0))
+                                if text:
+                                    retrieved_texts.append({
+                                        'text': text,
+                                        'score': score,
+                                    })
+                            elif isinstance(result, str):
+                                retrieved_texts.append({'text': result, 'score': 1.0})
+                        
+                        if retrieved_texts:
+                            # Format as context string
+                            context_text = "\n\n".join([
+                                f"[Relevance: {r['score']:.2f}]\n{r['text']}"
+                                for r in retrieved_texts[:pack.retriever_config.get('top_k', 5)]
+                            ])
+                            context[f"{pack.id}_context"] = context_text
+                            context[f"{pack.id}_sources"] = len(retrieved_texts)
+                else:
+                    # Fallback: return pack metadata
+                    context[f"{pack.id}_context"] = f"Knowledge pack '{pack.name}' loaded but retriever not configured"
+            except Exception as e:
+                # Log error but don't fail
+                import logging
+                logging.warning(f"Failed to retrieve from knowledge pack {pack.id}: {e}")
+                context[f"{pack.id}_context"] = f"Error retrieving from {pack.name}: {str(e)}"
+        
         return context
     
     def _log_run(

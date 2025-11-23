@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from agent_factory.core.tool import Tool
+from agent_factory.tools.base import Tool
 from agent_factory.registry.local_registry import LocalRegistry
 
 app = typer.Typer(name="tool", help="Manage tools")

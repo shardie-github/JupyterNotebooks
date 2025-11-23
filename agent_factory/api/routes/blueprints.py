@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 
 from agent_factory.registry.local_registry import LocalRegistry
-from agent_factory.core.blueprint import Blueprint
+from agent_factory.blueprints.model import Blueprint
 from agent_factory.marketplace import publish_blueprint, get_blueprint_details
 from agent_factory.marketplace.reviews import get_reviews
 from agent_factory.security.auth import get_current_user
@@ -56,7 +56,7 @@ async def create_blueprint(
         raise HTTPException(status_code=400, detail=f"Blueprint {blueprint_data.id} already exists")
     
     # Create blueprint from data
-    from agent_factory.core.blueprint import BlueprintConfig, PricingInfo, PricingModel
+    from agent_factory.blueprints.model import BlueprintConfig
     
     config = BlueprintConfig()
     if blueprint_data.config:

@@ -2,7 +2,7 @@
 
 import typer
 from typing import Optional
-from agent_factory.core.blueprint import Blueprint
+from agent_factory.blueprints.model import Blueprint
 from agent_factory.marketplace import publish_blueprint, search_blueprints, get_blueprint_details
 from agent_factory.registry.local_registry import LocalRegistry
 

@@ -5,7 +5,7 @@ Anthropic Claude SDK integration for Agent Factory Platform.
 import os
 from typing import List, Dict, Any, Optional
 from anthropic import Anthropic
-from agent_factory.core.tool import Tool
+from agent_factory.tools.base import Tool
 
 
 class AnthropicAgentClient:
